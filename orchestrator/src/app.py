@@ -7,8 +7,13 @@ import os
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
 sys.path.insert(0, fraud_detection_grpc_path)
-from fraud_detection_pb2 import *
-from fraud_detection_pb2_grpc import *
+import fraud_detection_pb2 as fraud_detection
+import fraud_detection_pb2_grpc as fraud_detection_grpc
+
+transaction_verification_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
+sys.path.insert(0, transaction_verification_grpc_path)
+import transaction_verification_pb2 as transaction_verification
+import transaction_verification_pb2_grpc as transaction_verification_grpc
 
 import grpc
 
@@ -16,18 +21,18 @@ def detect_fraud(request, order_id):
     # Establish a connection with the fraud-detection gRPC service.
     with grpc.insecure_channel('fraud_detection:50051') as channel:
         # Create a stub object.
-        stub = FraudDetectionServiceStub(channel)
+        stub = fraud_detection_grpc.FraudDetectionServiceStub(channel)
         # Call the service through the stub object.
-        response = stub.DetectFraud(FraudDetectionRequest(
+        response = stub.DetectFraud(fraud_detection.FraudDetectionRequest(
             orderId=order_id,
-            user=User(
+            user=fraud_detection.User(
                 name=request["user"]["name"],
                 contact=request["user"]["contact"]
             ),
             items=[
-                Item(name=item["name"], quantity=item["quantity"]) for item in request["items"]
+                fraud_detection.Item(name=item["name"], quantity=item["quantity"]) for item in request["items"]
             ],
-            billingAddress=Address(
+            billingAddress=fraud_detection.Address(
                 street=request["billingAddress"]["street"],
                 city=request["billingAddress"]["city"],
                 state=request["billingAddress"]["state"],
@@ -35,6 +40,30 @@ def detect_fraud(request, order_id):
                 country=request["billingAddress"]["country"]
             ),
             shippingMethod=request["shippingMethod"]
+        ))
+
+    return response
+
+def verify_transaction(request, order_id):
+    # Establish a connection with the transaction_verification gRPC service.
+    with grpc.insecure_channel('transaction_verification:50052') as channel:
+        # Create a stub object.
+        stub = transaction_verification_grpc.TransactionVerificationServiceStub(channel)
+        # Call the service through the stub object.
+        response = stub.VerifyTransaction(transaction_verification.TransactionVerificationRequest(
+            orderId=order_id,
+            user=transaction_verification.User(
+                name=request["user"]["name"],
+                contact=request["user"]["contact"]
+            ),
+            items=[
+                transaction_verification.Item(name=item["name"], quantity=item["quantity"]) for item in request["items"]
+            ],
+            creditCard=transaction_verification.CreditCard(
+                number=request["creditCard"]["number"],
+                expirationDate=request["creditCard"]["expirationDate"],
+                cvv=request["creditCard"]["cvv"]
+            )
         ))
 
     return response
@@ -79,13 +108,22 @@ def checkout():
                 }
             }, 400
 
-        # Call the fraud detection service
+        # Call the fraud detection and transaction verification services
         fraud_detection_response = detect_fraud(request_data, order_id)
+        transaction_verification_response = verify_transaction(request_data, order_id)
+
+        if fraud_detection_response.isFraudulent or not transaction_verification_response.isVerified:
+            print(f"Order {order_id} is fraudulent or not verified")
+            return {
+                "orderId": order_id,
+                "status": "Order Rejected",
+                "suggestedBooks": []
+            }, 200
 
         # Dummy response following the provided YAML specification for the bookstore
         order_status_response = {
             'orderId': order_id,
-            'status': 'Order Approved' if not fraud_detection_response.isFraudulent else 'Order Rejected',
+            'status': 'Order Approved',
             'suggestedBooks': [
                 {'bookId': '123', 'title': 'The Best Book', 'author': 'Author 1'},
                 {'bookId': '456', 'title': 'The Second Best Book', 'author': 'Author 2'}

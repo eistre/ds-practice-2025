@@ -1,5 +1,6 @@
 {
 	"python.analysis.extraPaths": [
-		"${workspaceFolder}/utils/pb/fraud_detection"
+		"${workspaceFolder}/utils/pb/fraud_detection",
+		"${workspaceFolder}/utils/pb/transaction_verification"
 	]
 }
