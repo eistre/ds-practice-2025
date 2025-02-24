@@ -16,6 +16,7 @@ import transaction_verification_pb2 as transaction_verification
 import transaction_verification_pb2_grpc as transaction_verification_grpc
 
 import grpc
+from concurrent import futures
 
 def detect_fraud(request, order_id):
     # Establish a connection with the fraud-detection gRPC service.
@@ -109,8 +110,11 @@ def checkout():
             }, 400
 
         # Call the fraud detection and transaction verification services
-        fraud_detection_response = detect_fraud(request_data, order_id)
-        transaction_verification_response = verify_transaction(request_data, order_id)
+        with futures.ThreadPoolExecutor() as executor:
+            fraud_detection_response, transaction_verification_response = executor.map(
+                lambda f: f(request_data, order_id),
+                [detect_fraud, verify_transaction]
+            )
 
         if fraud_detection_response.isFraudulent or not transaction_verification_response.isVerified:
             print(f"Order {order_id} is fraudulent or not verified")
