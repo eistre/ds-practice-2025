@@ -15,6 +15,11 @@ sys.path.insert(0, transaction_verification_grpc_path)
 import transaction_verification_pb2 as transaction_verification
 import transaction_verification_pb2_grpc as transaction_verification_grpc
 
+suggestions_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions'))
+sys.path.insert(0, suggestions_grpc_path)
+import suggestions_pb2 as suggestions
+import suggestions_pb2_grpc as suggestions_grpc
+
 import grpc
 from concurrent import futures
 
@@ -67,6 +72,18 @@ def verify_transaction(request, order_id):
             )
         ))
 
+    return response
+
+def get_book_suggestions(request, order_id):
+    # Establish a connection with the suggestions gRPC service.
+    with grpc.insecure_channel('suggestions:50053') as channel:
+        stub = suggestions_grpc.SuggestionServiceStub(channel)
+        # Calling the `getSuggestions` RPC with order data (adjust request data if needed).
+        response = stub.getSuggestions(suggestions.SuggestionRequest(
+            items=[
+                suggestions.Item(name=item["name"], quantity=item["quantity"]) for item in request["items"]
+            ]
+        ))
     return response
 
 # Import Flask.
@@ -123,15 +140,12 @@ def checkout():
                 "status": "Order Rejected",
                 "suggestedBooks": []
             }, 200
+        book_suggestions_response = get_book_suggestions(request_data,order_id)
 
-        # Dummy response following the provided YAML specification for the bookstore
         order_status_response = {
             'orderId': order_id,
             'status': 'Order Approved',
-            'suggestedBooks': [
-                {'bookId': '123', 'title': 'The Best Book', 'author': 'Author 1'},
-                {'bookId': '456', 'title': 'The Second Best Book', 'author': 'Author 2'}
-            ]
+            'suggestedBooks': [{'bookId': book.bookId, 'title': book.title, 'author': book.author} for book in book_suggestions_response.books]
         }
 
         return order_status_response

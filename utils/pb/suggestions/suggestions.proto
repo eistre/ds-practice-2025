@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package suggestions;
+
+service SuggestionService {
+    rpc getSuggestions (SuggestionRequest) returns (SuggestionResponse) {}
+}
+
+message SuggestionRequest {
+    repeated Item items = 1;
+}
+
+message SuggestionResponse {
+    repeated Book books = 1;
+}
+
+message Item {
+    string name = 1;
+    int32 quantity = 2;
+}
+
+message Book {
+    string bookId = 1;
+    string title = 2;
+    string author = 3;
+}
+
