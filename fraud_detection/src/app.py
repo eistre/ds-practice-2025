@@ -18,7 +18,6 @@ from pydantic import BaseModel
 
 class AIResponse(BaseModel):
     isFraudulent: bool
-    reasons: list[str]
 
 AI_FRAUD_DETECTION_PROMPT = """
     You are an expert fraud detection analyst with years of experience in e-commerce security.
@@ -49,7 +48,7 @@ class FraudDetectionService(FraudDetectionServiceServicer):
     def __init__(self):
         # Initialize google genai client
         self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
-        print("Google genai client initialized")
+        print("Fraud detection service initialized")
 
     def DetectFraud(self, request: FraudDetectionRequest, _):
         # Create a FraudDetection response

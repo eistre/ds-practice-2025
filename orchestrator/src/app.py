@@ -81,10 +81,12 @@ def get_book_suggestions(request, order_id):
         stub = suggestions_grpc.SuggestionServiceStub(channel)
         # Calling the `getSuggestions` RPC with items data
         response = stub.getSuggestions(suggestions.SuggestionRequest(
+            orderId=order_id,
             items=[
                 suggestions.Item(name=item["name"], quantity=item["quantity"]) for item in request["items"]
             ]
         ))
+
     return response
 
 # Import Flask.
@@ -131,7 +133,7 @@ def checkout():
         with futures.ThreadPoolExecutor() as executor:
             fraud_detection_response, transaction_verification_response, book_suggestions_response = executor.map(
                 lambda f: f(request_data, order_id),
-                [detect_fraud, verify_transaction,get_book_suggestions]
+                [detect_fraud, verify_transaction, get_book_suggestions]
             )
 
         if fraud_detection_response.isFraudulent or not transaction_verification_response.isVerified:

@@ -6,10 +6,12 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class SuggestionRequest(_message.Message):
-    __slots__ = ("items",)
+    __slots__ = ("orderId", "items")
+    ORDERID_FIELD_NUMBER: _ClassVar[int]
     ITEMS_FIELD_NUMBER: _ClassVar[int]
+    orderId: int
     items: _containers.RepeatedCompositeFieldContainer[Item]
-    def __init__(self, items: _Optional[_Iterable[_Union[Item, _Mapping]]] = ...) -> None: ...
+    def __init__(self, orderId: _Optional[int] = ..., items: _Optional[_Iterable[_Union[Item, _Mapping]]] = ...) -> None: ...
 
 class SuggestionResponse(_message.Message):
     __slots__ = ("books",)

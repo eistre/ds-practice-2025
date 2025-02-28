@@ -9,14 +9,11 @@ from suggestions_pb2 import *
 from suggestions_pb2_grpc import *
 
 import grpc
-import datetime
-from concurrent import futures
-
 import json
+import random
+from concurrent import futures
 from google import genai
 from pydantic import BaseModel
-
-import random
 
 class BookModel(BaseModel):
     title: str
@@ -24,7 +21,6 @@ class BookModel(BaseModel):
 
 class AIResponse(BaseModel):
     suggested_books: list[BookModel]
-    reasons: list[str]
 
 AI_SUGGESTION_PROMPT = """
     You are an expert book recommendation system with knowledge in books and their authors.
@@ -54,39 +50,41 @@ AI_SUGGESTION_PROMPT = """
 """
 
 class SuggestionService(SuggestionServiceServicer):
+
     def __init__(self):
         self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
         print("Transaction verification service initialized")
 
     def getSuggestions(self, request: SuggestionRequest, _):
-        print(f"Received request for suggestion for books {request.items}")
-        response = SuggestionResponse(books=[]) 
+        print(f"Received request for suggestion for books for order {request.orderId}")
 
-        # If more than 0 items then requesting suggestions from AI
-        if len(request.items) > 0 :
-            ai_response = self.client.models.generate_content(
+        # If no items then return empty response
+        if len(request.items) == 0:
+            return SuggestionResponse()
+
+        ai_response = self.client.models.generate_content(
             model="gemini-2.0-flash",
             contents=AI_SUGGESTION_PROMPT + json.dumps({
                 "items": [
                     {"name": item.name, "quantity": item.quantity} for item in request.items
-                ],
-                }),
-                config={
-                    "response_mime_type": "application/json",
-                    "response_schema": AIResponse,
-                    "candidate_count": 1
-                }
-            )
-            # Parse AI response
-            ai_response: AIResponse = ai_response.parsed
-            print(f"Suggested books {ai_response.suggested_books}")
-            # Update response
-            response = SuggestionResponse(books=[
-                Book(bookId=str(random.randint(3, 100)), title=book.title, author=book.author) 
-                for book in ai_response.suggested_books
-            ])
+                ]
+            }),
+            config={
+                "response_mime_type": "application/json",
+                "response_schema": AIResponse,
+                "candidate_count": 1
+            }
+        )
 
-        return response
+        # Parse AI response
+        ai_response: AIResponse = ai_response.parsed
+        print(f"Suggested books for order {request.orderId}: {[book.title for book in ai_response.suggested_books]}")
+
+        return SuggestionResponse(
+            books = [
+                Book(bookId=str(random.randint(3, 100)), title=book.title, author=book.author) for book in ai_response.suggested_books
+            ]
+        )
 
 def serve():
     # Create a gRPC server
