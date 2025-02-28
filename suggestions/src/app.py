@@ -16,8 +16,9 @@ import json
 from google import genai
 from pydantic import BaseModel
 
+import random
+
 class BookModel(BaseModel):
-    bookId: str
     title: str
     author: str
 
@@ -42,7 +43,6 @@ AI_SUGGESTION_PROMPT = """
     {
         "suggestedBooks": [
             {
-                "bookId": "string",
                 "title": "string",
                 "author": "string"
             }
@@ -80,10 +80,9 @@ class SuggestionService(SuggestionServiceServicer):
             # Parse AI response
             ai_response: AIResponse = ai_response.parsed
             print(f"Suggested books {ai_response.suggested_books}")
-
             # Update response
             response = SuggestionResponse(books=[
-                Book(bookId=book.bookId, title=book.title, author=book.author) 
+                Book(bookId=str(random.randint(3, 100)), title=book.title, author=book.author) 
                 for book in ai_response.suggested_books
             ])
 
