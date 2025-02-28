@@ -12,20 +12,82 @@ import grpc
 import datetime
 from concurrent import futures
 
+import json
+from google import genai
+from pydantic import BaseModel
+
+class BookModel(BaseModel):
+    bookId: str
+    title: str
+    author: str
+
+class AIResponse(BaseModel):
+    suggested_books: list[BookModel]
+    reasons: list[str]
+
+AI_SUGGESTION_PROMPT = """
+    You are an expert book recommendation system with knowledge in books and their authors.
+    Analyze the given order details and suggest **5** books based on user interests and purchasing behavior.
+    Even if you determine the order is used as test data, provide actual book recommendations to demonstrate your expertise.
+
+    Consider these key factors:
+    1. Ordered items (book names and quantities) - identify common themes or genres
+    2. Popular books related to the purchased ones
+    3. Trends in book recommendations
+
+    Based on your expert analysis, suggest **5** books that the user may find interesting. Return:
+    a list of suggested books.
+
+    Respond only in valid JSON format with this structure:
+    {
+        "suggestedBooks": [
+            {
+                "bookId": "string",
+                "title": "string",
+                "author": "string"
+            }
+        ]
+    }
+
+    Here are the books the user purchased:
+
+"""
+
 class SuggestionService(SuggestionServiceServicer):
     def __init__(self):
+        self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
         print("Transaction verification service initialized")
 
     def getSuggestions(self, request: SuggestionRequest, _):
         print(f"Received request for suggestion for books {request.items}")
-        
-        book1 = Book(bookId="1", title="Book 1", author="Author A")
-        book2 = Book(bookId="2", title="Book 2", author="Author B")
-        
-        # Adding books to the response
-        response = SuggestionResponse(books=[book1, book2])
-        return response
+        response = SuggestionResponse(books=[]) 
 
+        # If more than 0 items then requesting suggestions from AI
+        if len(request.items) > 0 :
+            ai_response = self.client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=AI_SUGGESTION_PROMPT + json.dumps({
+                "items": [
+                    {"name": item.name, "quantity": item.quantity} for item in request.items
+                ],
+                }),
+                config={
+                    "response_mime_type": "application/json",
+                    "response_schema": AIResponse,
+                    "candidate_count": 1
+                }
+            )
+            # Parse AI response
+            ai_response: AIResponse = ai_response.parsed
+            print(f"Suggested books {ai_response.suggested_books}")
+
+            # Update response
+            response = SuggestionResponse(books=[
+                Book(bookId=book.bookId, title=book.title, author=book.author) 
+                for book in ai_response.suggested_books
+            ])
+
+        return response
 
 def serve():
     # Create a gRPC server

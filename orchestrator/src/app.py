@@ -77,8 +77,9 @@ def verify_transaction(request, order_id):
 def get_book_suggestions(request, order_id):
     # Establish a connection with the suggestions gRPC service.
     with grpc.insecure_channel('suggestions:50053') as channel:
+        #creating stub object
         stub = suggestions_grpc.SuggestionServiceStub(channel)
-        # Calling the `getSuggestions` RPC with order data (adjust request data if needed).
+        # Calling the `getSuggestions` RPC with items data
         response = stub.getSuggestions(suggestions.SuggestionRequest(
             items=[
                 suggestions.Item(name=item["name"], quantity=item["quantity"]) for item in request["items"]
@@ -128,9 +129,9 @@ def checkout():
 
         # Call the fraud detection and transaction verification services
         with futures.ThreadPoolExecutor() as executor:
-            fraud_detection_response, transaction_verification_response = executor.map(
+            fraud_detection_response, transaction_verification_response, book_suggestions_response = executor.map(
                 lambda f: f(request_data, order_id),
-                [detect_fraud, verify_transaction]
+                [detect_fraud, verify_transaction,get_book_suggestions]
             )
 
         if fraud_detection_response.isFraudulent or not transaction_verification_response.isVerified:
@@ -140,7 +141,6 @@ def checkout():
                 "status": "Order Rejected",
                 "suggestedBooks": []
             }, 200
-        book_suggestions_response = get_book_suggestions(request_data,order_id)
 
         order_status_response = {
             'orderId': order_id,

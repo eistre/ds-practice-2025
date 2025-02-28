@@ -87,6 +87,8 @@ services:
       dockerfile: ./suggestions/Dockerfile  # Path to your suggestions service Dockerfile
     ports:
       - 50053:50053  # Exposing port 50053 for suggestions service
+    env_file:
+      - ./suggestions/.env
     environment:
       - PYTHONUNBUFFERED=TRUE
       - PYTHONFILE=/app/suggestions/src/app.py  # Ensure you reference the correct entry point for the suggestions service
