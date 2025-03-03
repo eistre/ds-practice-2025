@@ -21,9 +21,20 @@ import suggestions_pb2 as suggestions
 import suggestions_pb2_grpc as suggestions_grpc
 
 import grpc
+import logging
 from concurrent import futures
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] - [%(levelname)s] - [Thread %(thread)d] - %(message)s"
+)
+
+logger = logging.getLogger()
+
 def detect_fraud(request, order_id):
+    logger.info(f"[OrderId {order_id}] Calling fraud detection service")
+
     # Establish a connection with the fraud-detection gRPC service.
     with grpc.insecure_channel('fraud_detection:50051') as channel:
         # Create a stub object.
@@ -48,9 +59,12 @@ def detect_fraud(request, order_id):
             shippingMethod=request["shippingMethod"]
         ))
 
+    logger.info(f"[OrderId {order_id}] Fraud detection response: {response.isFraudulent}")
     return response
 
 def verify_transaction(request, order_id):
+    logger.info(f"[OrderId {order_id}] Calling transaction verification service")
+
     # Establish a connection with the transaction_verification gRPC service.
     with grpc.insecure_channel('transaction_verification:50052') as channel:
         # Create a stub object.
@@ -72,9 +86,12 @@ def verify_transaction(request, order_id):
             )
         ))
 
+    logger.info(f"[OrderId {order_id}] Transaction verification response: {response.isVerified}")
     return response
 
 def get_book_suggestions(request, order_id):
+    logger.info(f"[OrderId {order_id}] Calling suggestions service")
+
     # Establish a connection with the suggestions gRPC service.
     with grpc.insecure_channel('suggestions:50053') as channel:
         #creating stub object
@@ -87,6 +104,7 @@ def get_book_suggestions(request, order_id):
             ]
         ))
 
+    logger.info(f"[OrderId {order_id}] Suggestions response: {[book.title for book in response.books]}")
     return response
 
 # Import Flask.
@@ -113,7 +131,7 @@ def checkout():
         request_data = json.loads(request.data)
         order_id = 12345
 
-        print(f"Received checkout request, given order ID: {order_id}")
+        logger.info(f"[OrderId {order_id}] Received checkout request")
 
         # Validate request object data
         if any(key not in request_data for key in ["user", "creditCard", "items", "billingAddress", "shippingMethod", "giftWrapping", "termsAccepted"]) or \
@@ -121,7 +139,7 @@ def checkout():
             any(key not in request_data["creditCard"] for key in ["number", "expirationDate", "cvv"]) or \
             any(key not in request_data["billingAddress"] for key in ["street", "city", "state", "zip", "country"]):
             
-            print(f"Invalid request for order {order_id}")
+            logger.info(f"[OrderId {order_id}] Invalid request")
             return {
                 "error": {
                     "code": 400,
@@ -137,7 +155,7 @@ def checkout():
             )
 
         if fraud_detection_response.isFraudulent or not transaction_verification_response.isVerified:
-            print(f"Order {order_id} is fraudulent or not verified")
+            logger.info(f"[OrderId {order_id}] Order is fraudulent or not verified")
             return {
                 "orderId": order_id,
                 "status": "Order Rejected",
@@ -153,7 +171,7 @@ def checkout():
         return order_status_response
     
     except Exception as e:
-        print(f"Error during checkout: {e}")
+        logger.error(f"Error during checkout: {e}")
         return {
             "error": {
                 "code": 500,

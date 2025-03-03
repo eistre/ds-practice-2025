@@ -12,13 +12,22 @@ from transaction_verification_pb2_grpc import *
 
 import grpc
 import datetime
+import logging
 from concurrent import futures
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] - [%(levelname)s] - [Thread %(thread)d] - %(message)s"
+)
+
+logger = logging.getLogger()
 
 # Class for transaction verification
 class TransactionVerificationService(TransactionVerificationServiceServicer):
 
     def __init__(self):
-        print("Transaction verification service initialized")
+        logger.info("Transaction verification service initialized")
 
     def luhn_algorithm(self, credit_card):
         """
@@ -47,54 +56,42 @@ class TransactionVerificationService(TransactionVerificationServiceServicer):
         return sum % 10 == 0
 
     def VerifyTransaction(self, request: TransactionVerificationRequest, _):
-        # Create a TransactionVerification response
-        response = TransactionVerificationResponse()
-        print(f"Received request for transaction verification for order {request.orderId}")
+        logger.info(f"[Order {request.orderId}] Received request for transaction verification")
 
         # Perform simple transaction verification
         if len(request.items) == 0:
-            print(f"Order {request.orderId} has no items - transaction verification failed")
-            response.isVerified = False
-            return response
-
+            logger.info(f"[Order {request.orderId}] no items - transaction verification failed")
+            return TransactionVerificationResponse(isVerified=False)
 
         # Check if there are no zero quantity items
         for item in request.items:
             if item.quantity <= 0:
-                print(f"Order {request.orderId} has an item with invalid quantity - transaction verification failed")
-                response.isVerified = False
-                return response
+                logger.info(f"[Order {request.orderId}] item with invalid quantity - transaction verification failed")
+                return TransactionVerificationResponse(isVerified=False)
             
         # Check if all user details are provided
         if not request.user.name or not request.user.contact:
-            print(f"Order {request.orderId} is missing user details - transaction verification failed")
-            response.isVerified = False
-            return response
+            logger.info(f"[Order {request.orderId}] missing user details - transaction verification failed")
+            return TransactionVerificationResponse(isVerified=False)
 
         # Check if credit card details are valid via Luhn algorithm
         if not self.luhn_algorithm(request.creditCard.number):
-            print(f"Order {request.orderId} has an invalid credit card number - transaction verification failed")
-            response.isVerified = False
-            return response
+            logger.info(f"[Order {request.orderId}] invalid credit card number - transaction verification failed")
+            return TransactionVerificationResponse(isVerified=False)
         
         # Check if the credit card expiry date is valid
         month, year = request.creditCard.expirationDate.split("/")
         if int(month) > 12 or int(month) < 1:
-            print(f"Order {request.orderId} has an invalid credit card expiration date - transaction verification failed")
-            response.isVerified = False
-            return response
+            logger.info(f"[Order {request.orderId}] invalid credit card expiration date - transaction verification failed")
+            return TransactionVerificationResponse(isVerified=False)
         
         if int("20" + year) < datetime.datetime.now().year or (int("20" + year) == datetime.datetime.now().year and int(month) < datetime.datetime.now().month):
-            print(f"Order {request.orderId} has an expired credit card - transaction verification failed")
-            response.isVerified = False
-            return response
+            logger.info(f"[Order {request.orderId}] expired credit card - transaction verification failed")
+            return TransactionVerificationResponse(isVerified=False)
 
         # Verify transaction
-        print(f"Order {request.orderId} has passed transaction verification")
-        response.isVerified = True
-
-        return response
-
+        logger.info(f"[Order {request.orderId}] has passed transaction verification")
+        return TransactionVerificationResponse(isVerified=True)
 
 def serve():
     # Create a gRPC server
@@ -106,7 +103,7 @@ def serve():
     server.add_insecure_port("[::]:" + port)
     # Start the server
     server.start()
-    print("Server started. Listening on port 50052.")
+    logger.info("Server started. Listening on port 50052.")
     # Keep thread alive
     server.wait_for_termination()
 

@@ -12,9 +12,18 @@ from fraud_detection_pb2_grpc import *
 
 import grpc
 import json
+import logging
 from concurrent import futures
 from google import genai
 from pydantic import BaseModel
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] - [%(levelname)s] - [Thread %(thread)d] - %(message)s"
+)
+
+logger = logging.getLogger()
 
 class AIResponse(BaseModel):
     isFraudulent: bool
@@ -48,24 +57,19 @@ class FraudDetectionService(FraudDetectionServiceServicer):
     def __init__(self):
         # Initialize google genai client
         self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
-        print("Fraud detection service initialized")
+        logger.info("Fraud detection service initialized")
 
     def DetectFraud(self, request: FraudDetectionRequest, _):
-        # Create a FraudDetection response
-        response = FraudDetectionResponse()
-        response.isFraudulent = False
-        print(f"Received request for fraud detection for order {request.orderId}")
+        logger.info(f"[OrderId {request.orderId}] Received request for fraud detection")
 
         # Perform simple fraud detection
         if len(request.items) > 10:
-            print(f"Too many items in order {request.orderId}")
-            response.isFraudulent = True
-            return response
+            logger.info(f"[OrderId {request.orderId}] Too many items in order - fraud detection failed")
+            return FraudDetectionResponse(isFraudulent=True)
         
         if any(item.quantity > 20 for item in request.items):
-            print(f"Too many of a single item in order {request.orderId}")
-            response.isFraudulent = True
-            return response
+            logger.info(f"[OrderId {request.orderId}] Too many of a single item in order - fraud detection failed")
+            return FraudDetectionResponse(isFraudulent=True)
 
         # Complex fraud detection via AI
         ai_response = self.client.models.generate_content(
@@ -96,12 +100,9 @@ class FraudDetectionService(FraudDetectionServiceServicer):
 
         # Parse AI response
         ai_response: AIResponse = ai_response.parsed
+        logger.info(f"[OrderId {request.orderId}] AI response: {ai_response.isFraudulent}")
 
-        # Update response
-        response.isFraudulent = ai_response.isFraudulent or response.isFraudulent
-        print(f"Fraud detection for order {request.orderId}:", ai_response.isFraudulent)
-
-        return response
+        return FraudDetectionResponse(isFraudulent=ai_response.isFraudulent)
 
 def serve():
     # Create a gRPC server
@@ -113,7 +114,7 @@ def serve():
     server.add_insecure_port("[::]:" + port)
     # Start the server
     server.start()
-    print("Server started. Listening on port 50051.")
+    logger.info("Server started. Listening on port 50051.")
     # Keep thread alive
     server.wait_for_termination()
 

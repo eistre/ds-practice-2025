@@ -11,9 +11,18 @@ from suggestions_pb2_grpc import *
 import grpc
 import json
 import random
+import logging
 from concurrent import futures
 from google import genai
 from pydantic import BaseModel
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] - [%(levelname)s] - [Thread %(thread)d] - %(message)s"
+)
+
+logger = logging.getLogger()
 
 class BookModel(BaseModel):
     title: str
@@ -53,13 +62,14 @@ class SuggestionService(SuggestionServiceServicer):
 
     def __init__(self):
         self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
-        print("Transaction verification service initialized")
+        logger.info("Suggestion service initialized")
 
     def getSuggestions(self, request: SuggestionRequest, _):
-        print(f"Received request for suggestion for books for order {request.orderId}")
+        logger.info(f"[OrderId {request.orderId}] Received request for suggestion for books")
 
         # If no items then return empty response
         if len(request.items) == 0:
+            logger.info(f"[OrderId {request.orderId}] No items in order")
             return SuggestionResponse()
 
         ai_response = self.client.models.generate_content(
@@ -78,7 +88,7 @@ class SuggestionService(SuggestionServiceServicer):
 
         # Parse AI response
         ai_response: AIResponse = ai_response.parsed
-        print(f"Suggested books for order {request.orderId}: {[book.title for book in ai_response.suggested_books]}")
+        logger.info(f"[OrderId {request.orderId}] Received AI response: {[book.title for book in ai_response.suggested_books]}")
 
         return SuggestionResponse(
             books = [
@@ -96,7 +106,7 @@ def serve():
     server.add_insecure_port("[::]:" + port)
     # Start the server
     server.start()
-    print("Server started. Listening on port 50053.")
+    logger.info("Server started. Listening on port 50053.")
     # Keep thread alive
     server.wait_for_termination()
 
