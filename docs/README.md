@@ -55,5 +55,5 @@ This diagram shows the request lifecycle:
     ```
     GOOGLE_API_KEY=<your_google_api_key>
     ```
-3. Run `docker-compose up --build` to start all services;
+3. Run `docker compose up` to start all services;
 4. Access the frontend at `http://localhost:8080`.
