@@ -32,7 +32,7 @@ logger = logging.getLogger()
 def detect_fraud(request, order_id):
     logger.info(f"[OrderId {order_id}] Calling fraud detection service")
 
-    # Establish a connection with the fraud-detection gRPC service.
+    # Establish a connection with the fraud_detection gRPC service.
     with grpc.insecure_channel('fraud_detection:50051') as channel:
         # Create a stub object.
         stub = fraud_detection_grpc.FraudDetectionServiceStub(channel)
@@ -91,7 +91,7 @@ def get_book_suggestions(request, order_id):
 
     # Establish a connection with the suggestions gRPC service.
     with grpc.insecure_channel('suggestions:50053') as channel:
-        #creating stub object
+        # Creating stub object
         stub = suggestions_grpc.SuggestionServiceStub(channel)
         # Calling the `getSuggestions` RPC with items data
         response = stub.getSuggestions(suggestions.SuggestionRequest(
@@ -144,7 +144,7 @@ def checkout():
                 }
             }, 400
 
-        # Call the fraud detection and transaction verification services
+        # Call the fraud_detection, transaction_verification and suggestions services concurrently
         with futures.ThreadPoolExecutor() as executor:
             fraud_detection_response, transaction_verification_response, book_suggestions_response = executor.map(
                 lambda f: f(request_data, order_id),
@@ -159,13 +159,11 @@ def checkout():
                 "suggestedBooks": []
             }, 200
 
-        order_status_response = {
-            'orderId': order_id,
-            'status': 'Order Approved',
-            'suggestedBooks': [{'bookId': book.bookId, 'title': book.title, 'author': book.author} for book in book_suggestions_response.books]
-        }
-
-        return order_status_response
+        return {
+            "orderId": order_id,
+            "status": "Order Approved",
+            "suggestedBooks": [{"bookId": book.bookId, "title": book.title, "author": book.author} for book in book_suggestions_response.books]
+        }, 200
     
     except Exception as e:
         logger.error(f"Error during checkout: {e}")

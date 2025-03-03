@@ -72,6 +72,7 @@ class SuggestionService(SuggestionServiceServicer):
             logger.info(f"[OrderId {request.orderId}] No items in order")
             return SuggestionResponse()
 
+        # Generate AI response
         ai_response = self.client.models.generate_content(
             model="gemini-2.0-flash",
             contents=AI_SUGGESTION_PROMPT + json.dumps({
