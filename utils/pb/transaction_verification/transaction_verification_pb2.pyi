@@ -11,11 +11,11 @@ class TransactionVerificationRequest(_message.Message):
     USER_FIELD_NUMBER: _ClassVar[int]
     ITEMS_FIELD_NUMBER: _ClassVar[int]
     CREDITCARD_FIELD_NUMBER: _ClassVar[int]
-    orderId: int
+    orderId: str
     user: User
     items: _containers.RepeatedCompositeFieldContainer[Item]
     creditCard: CreditCard
-    def __init__(self, orderId: _Optional[int] = ..., user: _Optional[_Union[User, _Mapping]] = ..., items: _Optional[_Iterable[_Union[Item, _Mapping]]] = ..., creditCard: _Optional[_Union[CreditCard, _Mapping]] = ...) -> None: ...
+    def __init__(self, orderId: _Optional[str] = ..., user: _Optional[_Union[User, _Mapping]] = ..., items: _Optional[_Iterable[_Union[Item, _Mapping]]] = ..., creditCard: _Optional[_Union[CreditCard, _Mapping]] = ...) -> None: ...
 
 class TransactionVerificationResponse(_message.Message):
     __slots__ = ("isVerified",)

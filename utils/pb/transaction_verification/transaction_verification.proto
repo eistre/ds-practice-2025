@@ -7,7 +7,7 @@ service TransactionVerificationService {
 }
 
 message TransactionVerificationRequest {
-    int32 orderId = 1;
+    string orderId = 1;
     User user = 2;
     repeated Item items = 3;
     CreditCard creditCard = 4;

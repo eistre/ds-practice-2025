@@ -12,12 +12,12 @@ class FraudDetectionRequest(_message.Message):
     ITEMS_FIELD_NUMBER: _ClassVar[int]
     BILLINGADDRESS_FIELD_NUMBER: _ClassVar[int]
     SHIPPINGMETHOD_FIELD_NUMBER: _ClassVar[int]
-    orderId: int
+    orderId: str
     user: User
     items: _containers.RepeatedCompositeFieldContainer[Item]
     billingAddress: Address
     shippingMethod: str
-    def __init__(self, orderId: _Optional[int] = ..., user: _Optional[_Union[User, _Mapping]] = ..., items: _Optional[_Iterable[_Union[Item, _Mapping]]] = ..., billingAddress: _Optional[_Union[Address, _Mapping]] = ..., shippingMethod: _Optional[str] = ...) -> None: ...
+    def __init__(self, orderId: _Optional[str] = ..., user: _Optional[_Union[User, _Mapping]] = ..., items: _Optional[_Iterable[_Union[Item, _Mapping]]] = ..., billingAddress: _Optional[_Union[Address, _Mapping]] = ..., shippingMethod: _Optional[str] = ...) -> None: ...
 
 class FraudDetectionResponse(_message.Message):
     __slots__ = ("isFraudulent",)

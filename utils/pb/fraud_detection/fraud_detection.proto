@@ -7,7 +7,7 @@ service FraudDetectionService {
 }
 
 message FraudDetectionRequest {
-    int32 orderId = 1;
+    string orderId = 1;
     User user = 2;
     repeated Item items = 3;
     Address billingAddress = 4;

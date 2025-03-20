@@ -9,9 +9,9 @@ class SuggestionRequest(_message.Message):
     __slots__ = ("orderId", "items")
     ORDERID_FIELD_NUMBER: _ClassVar[int]
     ITEMS_FIELD_NUMBER: _ClassVar[int]
-    orderId: int
+    orderId: str
     items: _containers.RepeatedCompositeFieldContainer[Item]
-    def __init__(self, orderId: _Optional[int] = ..., items: _Optional[_Iterable[_Union[Item, _Mapping]]] = ...) -> None: ...
+    def __init__(self, orderId: _Optional[str] = ..., items: _Optional[_Iterable[_Union[Item, _Mapping]]] = ...) -> None: ...
 
 class SuggestionResponse(_message.Message):
     __slots__ = ("books",)
