@@ -17,6 +17,7 @@ import transaction_verification_pb2_grpc as transaction_verification_grpc
 import suggestions_pb2 as suggestions
 import suggestions_pb2_grpc as suggestions_grpc
 
+import uuid
 import grpc
 import logging
 from concurrent import futures
@@ -126,7 +127,7 @@ def checkout():
     try:
         # Get request object data to json
         request_data = json.loads(request.data)
-        order_id = 12345
+        order_id = str(uuid.uuid4())
 
         logger.info(f"[OrderId {order_id}] Received checkout request")
 

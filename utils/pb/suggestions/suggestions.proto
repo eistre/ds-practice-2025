@@ -7,7 +7,7 @@ service SuggestionService {
 }
 
 message SuggestionRequest {
-    int32 orderId = 1;
+    string orderId = 1;
     repeated Item items = 2;
 }
 
