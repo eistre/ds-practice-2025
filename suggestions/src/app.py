@@ -12,9 +12,10 @@ import grpc
 import json
 import random
 import logging
-from concurrent import futures
 from google import genai
+from concurrent import futures
 from pydantic import BaseModel
+from google.protobuf import empty_pb2
 
 # Configure logging
 logging.basicConfig(
@@ -59,25 +60,33 @@ AI_SUGGESTION_PROMPT = """
 """
 
 class SuggestionService(SuggestionServiceServicer):
-
     def __init__(self):
+        # Initialize google genai client
         self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+        self.orders: dict[str, InitializationRequest] = {}
         logger.info("Suggestion service initialized")
 
-    def getSuggestions(self, request: SuggestionRequest, _):
-        logger.info(f"[OrderId {request.orderId}] Received request for suggestion for books")
+    def InitOrder(self, request: InitializationRequest, _):
+        self.orders[request.order_id] = request
+        logger.info(f"[Order {request.order_id}] - Order initialized")
+        return empty_pb2.Empty()
 
-        # If no items then return empty response
-        if len(request.items) == 0:
-            logger.info(f"[OrderId {request.orderId}] No items in order")
-            return SuggestionResponse()
+    def SuggestBooks(self, request: ContinuationRequest, _):
+        logger.info(f"[Order {request.order_id}] - Book suggestion request received")
+
+        # Check if the order exists
+        if request.order_id not in self.orders:
+            logger.info(f"[Order {request.order_id}] - Order not found: book suggestion failed")
+            return SuggestionResponse(books=[])
+        
+        items = self.orders[request.order_id].items
 
         # Generate AI response
         ai_response = self.client.models.generate_content(
             model="gemini-2.0-flash",
             contents=AI_SUGGESTION_PROMPT + json.dumps({
                 "items": [
-                    {"name": item.name, "quantity": item.quantity} for item in request.items
+                    {"name": item.name, "quantity": item.quantity} for item in items
                 ]
             }),
             config={
@@ -89,11 +98,11 @@ class SuggestionService(SuggestionServiceServicer):
 
         # Parse AI response
         ai_response: AIResponse = ai_response.parsed
-        logger.info(f"[OrderId {request.orderId}] Received AI response: {[book.title for book in ai_response.suggested_books]}")
+        logger.info(f"[Order {request.order_id}] - Book suggestion successful: {[book.title for book in ai_response.suggested_books]}")
 
         return SuggestionResponse(
             books = [
-                Book(bookId=str(random.randint(3, 100)), title=book.title, author=book.author) for book in ai_response.suggested_books
+                Book(book_id=str(random.randint(3, 100)), title=book.title, author=book.author) for book in ai_response.suggested_books
             ]
         )
 

@@ -1,3 +1,4 @@
+from google.protobuf import empty_pb2 as _empty_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
@@ -5,13 +6,19 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
-class SuggestionRequest(_message.Message):
-    __slots__ = ("orderId", "items")
-    ORDERID_FIELD_NUMBER: _ClassVar[int]
+class InitializationRequest(_message.Message):
+    __slots__ = ("order_id", "items")
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
     ITEMS_FIELD_NUMBER: _ClassVar[int]
-    orderId: str
+    order_id: str
     items: _containers.RepeatedCompositeFieldContainer[Item]
-    def __init__(self, orderId: _Optional[str] = ..., items: _Optional[_Iterable[_Union[Item, _Mapping]]] = ...) -> None: ...
+    def __init__(self, order_id: _Optional[str] = ..., items: _Optional[_Iterable[_Union[Item, _Mapping]]] = ...) -> None: ...
+
+class ContinuationRequest(_message.Message):
+    __slots__ = ("order_id",)
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
+    order_id: str
+    def __init__(self, order_id: _Optional[str] = ...) -> None: ...
 
 class SuggestionResponse(_message.Message):
     __slots__ = ("books",)
@@ -28,11 +35,11 @@ class Item(_message.Message):
     def __init__(self, name: _Optional[str] = ..., quantity: _Optional[int] = ...) -> None: ...
 
 class Book(_message.Message):
-    __slots__ = ("bookId", "title", "author")
-    BOOKID_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("book_id", "title", "author")
+    BOOK_ID_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
     AUTHOR_FIELD_NUMBER: _ClassVar[int]
-    bookId: str
+    book_id: str
     title: str
     author: str
-    def __init__(self, bookId: _Optional[str] = ..., title: _Optional[str] = ..., author: _Optional[str] = ...) -> None: ...
+    def __init__(self, book_id: _Optional[str] = ..., title: _Optional[str] = ..., author: _Optional[str] = ...) -> None: ...

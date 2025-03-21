@@ -1,26 +1,9 @@
-import sys
-import os
-
-# This set of lines are needed to import the gRPC stubs.
-# The path of the stubs is relative to the current file, or absolute inside the container.
-# Change these lines only if strictly needed.
-FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-RPCs = ["fraud_detection", "transaction_verification", "suggestions"]
-
-for rpc in RPCs:
-    sys.path.insert(0, os.path.abspath(os.path.join(FILE, f"../../../utils/pb/{rpc}")))
-    
-import fraud_detection_pb2 as fraud_detection
-import fraud_detection_pb2_grpc as fraud_detection_grpc
-import transaction_verification_pb2 as transaction_verification
-import transaction_verification_pb2_grpc as transaction_verification_grpc
-import suggestions_pb2 as suggestions
-import suggestions_pb2_grpc as suggestions_grpc
-
 import uuid
-import grpc
 import logging
 from concurrent import futures
+from service_calls.suggestions_calls import initialize_suggestions, get_book_suggestions
+from service_calls.fraud_detection_calls import initialize_fraud_detection, check_user_data, check_credit_card
+from service_calls.transaction_verification_calls import initialize_transaction_verification, verify_order_items, verify_user_data, verify_credit_card
 
 # Configure logging
 logging.basicConfig(
@@ -29,81 +12,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger()
-
-def detect_fraud(request, order_id):
-    logger.info(f"[OrderId {order_id}] Calling fraud detection service")
-
-    # Establish a connection with the fraud_detection gRPC service.
-    with grpc.insecure_channel('fraud_detection:50051') as channel:
-        # Create a stub object.
-        stub = fraud_detection_grpc.FraudDetectionServiceStub(channel)
-        # Call the service through the stub object.
-        response = stub.DetectFraud(fraud_detection.FraudDetectionRequest(
-            orderId=order_id,
-            user=fraud_detection.User(
-                name=request["user"]["name"],
-                contact=request["user"]["contact"]
-            ),
-            items=[
-                fraud_detection.Item(name=item["name"], quantity=item["quantity"]) for item in request["items"]
-            ],
-            billingAddress=fraud_detection.Address(
-                street=request["billingAddress"]["street"],
-                city=request["billingAddress"]["city"],
-                state=request["billingAddress"]["state"],
-                zip=request["billingAddress"]["zip"],
-                country=request["billingAddress"]["country"]
-            ),
-            shippingMethod=request["shippingMethod"]
-        ))
-
-    logger.info(f"[OrderId {order_id}] Fraud detection response: {response.isFraudulent}")
-    return response
-
-def verify_transaction(request, order_id):
-    logger.info(f"[OrderId {order_id}] Calling transaction verification service")
-
-    # Establish a connection with the transaction_verification gRPC service.
-    with grpc.insecure_channel('transaction_verification:50052') as channel:
-        # Create a stub object.
-        stub = transaction_verification_grpc.TransactionVerificationServiceStub(channel)
-        # Call the service through the stub object.
-        response = stub.VerifyTransaction(transaction_verification.TransactionVerificationRequest(
-            orderId=order_id,
-            user=transaction_verification.User(
-                name=request["user"]["name"],
-                contact=request["user"]["contact"]
-            ),
-            items=[
-                transaction_verification.Item(name=item["name"], quantity=item["quantity"]) for item in request["items"]
-            ],
-            creditCard=transaction_verification.CreditCard(
-                number=request["creditCard"]["number"],
-                expirationDate=request["creditCard"]["expirationDate"],
-                cvv=request["creditCard"]["cvv"]
-            )
-        ))
-
-    logger.info(f"[OrderId {order_id}] Transaction verification response: {response.isVerified}")
-    return response
-
-def get_book_suggestions(request, order_id):
-    logger.info(f"[OrderId {order_id}] Calling suggestions service")
-
-    # Establish a connection with the suggestions gRPC service.
-    with grpc.insecure_channel('suggestions:50053') as channel:
-        # Creating stub object
-        stub = suggestions_grpc.SuggestionServiceStub(channel)
-        # Calling the `getSuggestions` RPC with items data
-        response = stub.getSuggestions(suggestions.SuggestionRequest(
-            orderId=order_id,
-            items=[
-                suggestions.Item(name=item["name"], quantity=item["quantity"]) for item in request["items"]
-            ]
-        ))
-
-    logger.info(f"[OrderId {order_id}] Suggestions response: {[book.title for book in response.books]}")
-    return response
 
 # Import Flask.
 # Flask is a web framework for Python.
@@ -127,53 +35,65 @@ def checkout():
     try:
         # Get request object data to json
         request_data = json.loads(request.data)
+
+        # Generate a unique order ID
         order_id = str(uuid.uuid4())
+        logger.info(f"[Order {order_id}] - Checkout request received")
 
-        logger.info(f"[OrderId {order_id}] Received checkout request")
-
-        # Validate request object data
-        if any(key not in request_data for key in ["user", "creditCard", "items", "billingAddress", "shippingMethod", "giftWrapping", "termsAccepted"]) or \
-            any(key not in request_data["user"] for key in ["name", "contact"]) or \
-            any(key not in request_data["creditCard"] for key in ["number", "expirationDate", "cvv"]) or \
-            any(key not in request_data["billingAddress"] for key in ["street", "city", "state", "zip", "country"]):
-            
-            logger.info(f"[OrderId {order_id}] Invalid request")
-            return {
-                "error": {
-                    "code": 400,
-                    "message": "Invalid request"
-                }
-            }, 400
-
-        # Call the fraud_detection, transaction_verification and suggestions services concurrently
         with futures.ThreadPoolExecutor() as executor:
-            fraud_detection_response, transaction_verification_response, book_suggestions_response = executor.map(
-                lambda f: f(request_data, order_id),
-                [detect_fraud, verify_transaction, get_book_suggestions]
-            )
+            # 1) Tell each service to initialize (cache) this order
+            logger.info(f"[Order {order_id}] - Initializing service caches")
 
-        if fraud_detection_response.isFraudulent or not transaction_verification_response.isVerified:
-            logger.info(f"[OrderId {order_id}] Order is fraudulent or not verified")
+            list(executor.map(
+                lambda f: f(request_data, order_id),
+                [initialize_fraud_detection, initialize_transaction_verification, initialize_suggestions]
+            ))
+
+            # 2) Verify order items (a) and ensure that the user data is filled (b)
+            verify_order_items_future = executor.submit(verify_order_items, order_id)
+            verify_user_data_future = executor.submit(verify_user_data, order_id)
+
+            # 3) Verify credit card data (c) after (a) and check user data for fraud (d) after (b)
+            verify_credit_card_future = executor.submit(verify_credit_card, order_id, verify_order_items_future)
+            check_user_data_future = executor.submit(check_user_data, order_id, verify_user_data_future)
+
+            # 4) Check credit card for fraud (e) after (c) and (d)
+            verify_credit_card_future.result()
+            check_user_data_future.result()
+
+            check_credit_card(order_id)
+
+            # 5) Get book suggestions (f) after (e)
+            books = get_book_suggestions(order_id)
+
+            return {
+                "orderId": order_id,
+                "status": "Order Approved",
+                "suggestedBooks": [{"bookId": book.book_id, "title": book.title, "author": book.author} for book in books]
+            }, 200
+    
+    except Exception as error:
+        # Order related errors
+        if error.args[0] == order_id:
+            logger.info(f"[Order {order_id}] - {error.args[1]}")
             return {
                 "orderId": order_id,
                 "status": "Order Rejected",
                 "suggestedBooks": []
-            }, 200
-
-        return {
-            "orderId": order_id,
-            "status": "Order Approved",
-            "suggestedBooks": [{"bookId": book.bookId, "title": book.title, "author": book.author} for book in book_suggestions_response.books]
-        }, 200
-    
-    except Exception as e:
-        logger.error(f"Error during checkout: {e}")
-        return {
-            "error": {
-                "code": 500,
-                "message": "An error occurred"
             }
-        }, 500
+        
+        # Other errors
+        else:
+            logger.error(f"[Order {order_id}] - An error occurred: {error.args[0]}")
+            return {
+                "error": {
+                    "code": 500,
+                    "message": "An error occurred"
+                }
+            }, 500
+    
+    finally:
+        logger.info(f"[Order {order_id}] - Checkout request completed")
 
 
 if __name__ == '__main__':

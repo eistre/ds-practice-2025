@@ -12,25 +12,30 @@ from google.protobuf.internal import builder as _builder
 _sym_db = _symbol_database.Default()
 
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1etransaction_verification.proto\x12\x18transaction_verification\"\xc8\x01\n\x1eTransactionVerificationRequest\x12\x0f\n\x07orderId\x18\x01 \x01(\t\x12,\n\x04user\x18\x02 \x01(\x0b\x32\x1e.transaction_verification.User\x12-\n\x05items\x18\x03 \x03(\x0b\x32\x1e.transaction_verification.Item\x12\x38\n\ncreditCard\x18\x04 \x01(\x0b\x32$.transaction_verification.CreditCard\"5\n\x1fTransactionVerificationResponse\x12\x12\n\nisVerified\x18\x01 \x01(\x08\"%\n\x04User\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontact\x18\x02 \x01(\t\"&\n\x04Item\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x10\n\x08quantity\x18\x02 \x01(\x05\"A\n\nCreditCard\x12\x0e\n\x06number\x18\x01 \x01(\t\x12\x16\n\x0e\x65xpirationDate\x18\x02 \x01(\t\x12\x0b\n\x03\x63vv\x18\x03 \x01(\t2\xad\x01\n\x1eTransactionVerificationService\x12\x8a\x01\n\x11VerifyTransaction\x12\x38.transaction_verification.TransactionVerificationRequest\x1a\x39.transaction_verification.TransactionVerificationResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1etransaction_verification.proto\x12\x18transaction_verification\x1a\x1bgoogle/protobuf/empty.proto\"\xc1\x01\n\x15InitializationRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12,\n\x04user\x18\x02 \x01(\x0b\x32\x1e.transaction_verification.User\x12-\n\x05items\x18\x03 \x03(\x0b\x32\x1e.transaction_verification.Item\x12\x39\n\x0b\x63redit_card\x18\x04 \x01(\x0b\x32$.transaction_verification.CreditCard\"\'\n\x13\x43ontinuationRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\"(\n\x14VerificationResponse\x12\x10\n\x08verified\x18\x01 \x01(\x08\"Y\n\x04User\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontact\x18\x02 \x01(\t\x12\x32\n\x07\x61\x64\x64ress\x18\x03 \x01(\x0b\x32!.transaction_verification.Address\"T\n\x07\x41\x64\x64ress\x12\x0e\n\x06street\x18\x01 \x01(\t\x12\x0c\n\x04\x63ity\x18\x02 \x01(\t\x12\r\n\x05state\x18\x03 \x01(\t\x12\x0b\n\x03zip\x18\x04 \x01(\t\x12\x0f\n\x07\x63ountry\x18\x05 \x01(\t\"&\n\x04Item\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x10\n\x08quantity\x18\x02 \x01(\x05\"B\n\nCreditCard\x12\x0e\n\x06number\x18\x01 \x01(\t\x12\x17\n\x0f\x65xpiration_date\x18\x02 \x01(\t\x12\x0b\n\x03\x63vv\x18\x03 \x01(\t2\xd0\x03\n\x1eTransactionVerificationService\x12V\n\tInitOrder\x12/.transaction_verification.InitializationRequest\x1a\x16.google.protobuf.Empty\"\x00\x12n\n\x0bVerifyItems\x12-.transaction_verification.ContinuationRequest\x1a..transaction_verification.VerificationResponse\"\x00\x12q\n\x0eVerifyUserData\x12-.transaction_verification.ContinuationRequest\x1a..transaction_verification.VerificationResponse\"\x00\x12s\n\x10VerifyCreditCard\x12-.transaction_verification.ContinuationRequest\x1a..transaction_verification.VerificationResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'transaction_verification_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_TRANSACTIONVERIFICATIONREQUEST']._serialized_start=61
-  _globals['_TRANSACTIONVERIFICATIONREQUEST']._serialized_end=261
-  _globals['_TRANSACTIONVERIFICATIONRESPONSE']._serialized_start=263
-  _globals['_TRANSACTIONVERIFICATIONRESPONSE']._serialized_end=316
-  _globals['_USER']._serialized_start=318
-  _globals['_USER']._serialized_end=355
-  _globals['_ITEM']._serialized_start=357
-  _globals['_ITEM']._serialized_end=395
-  _globals['_CREDITCARD']._serialized_start=397
-  _globals['_CREDITCARD']._serialized_end=462
-  _globals['_TRANSACTIONVERIFICATIONSERVICE']._serialized_start=465
-  _globals['_TRANSACTIONVERIFICATIONSERVICE']._serialized_end=638
+  _globals['_INITIALIZATIONREQUEST']._serialized_start=90
+  _globals['_INITIALIZATIONREQUEST']._serialized_end=283
+  _globals['_CONTINUATIONREQUEST']._serialized_start=285
+  _globals['_CONTINUATIONREQUEST']._serialized_end=324
+  _globals['_VERIFICATIONRESPONSE']._serialized_start=326
+  _globals['_VERIFICATIONRESPONSE']._serialized_end=366
+  _globals['_USER']._serialized_start=368
+  _globals['_USER']._serialized_end=457
+  _globals['_ADDRESS']._serialized_start=459
+  _globals['_ADDRESS']._serialized_end=543
+  _globals['_ITEM']._serialized_start=545
+  _globals['_ITEM']._serialized_end=583
+  _globals['_CREDITCARD']._serialized_start=585
+  _globals['_CREDITCARD']._serialized_end=651
+  _globals['_TRANSACTIONVERIFICATIONSERVICE']._serialized_start=654
+  _globals['_TRANSACTIONVERIFICATIONSERVICE']._serialized_end=1118
 # @@protoc_insertion_point(module_scope)
