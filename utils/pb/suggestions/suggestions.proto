@@ -3,29 +3,21 @@ syntax = "proto3";
 package suggestions;
 
 import "google/protobuf/empty.proto";
+import "utils/utils.proto";
 
 service SuggestionService {
     rpc InitOrder (InitializationRequest) returns (google.protobuf.Empty) {}
-    rpc SuggestBooks (ContinuationRequest) returns (SuggestionResponse) {}
-    rpc ClearOrder (ContinuationRequest) returns (google.protobuf.Empty) {}
+    rpc SuggestBooks (utils.ContinuationRequest) returns (SuggestionResponse) {}
+    rpc ClearOrder (utils.ContinuationRequest) returns (google.protobuf.Empty) {}
 }
 
 message InitializationRequest {
     string order_id = 1;
-    repeated Item items = 2;
-}
-
-message ContinuationRequest {
-    string order_id = 1;
+    repeated utils.Item items = 2;
 }
 
 message SuggestionResponse {
     repeated Book books = 1;
-}
-
-message Item {
-    string name = 1;
-    int32 quantity = 2;
 }
 
 message Book {
