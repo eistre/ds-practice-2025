@@ -8,6 +8,7 @@ service FraudDetectionService {
     rpc InitOrder (InitializationRequest) returns (google.protobuf.Empty) {}
     rpc CheckUserData (ContinuationRequest) returns (DetectionResponse) {}
     rpc CheckCreditCard (ContinuationRequest) returns (DetectionResponse) {}
+    rpc ClearOrder (ContinuationRequest) returns (google.protobuf.Empty) {}
 }
 
 message InitializationRequest {

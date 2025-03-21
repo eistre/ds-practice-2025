@@ -79,3 +79,8 @@ def verify_credit_card(order_id, verify_order_items_future: futures.Future[None]
             raise Exception(f"[Order {order_id}] - Credit card: verification failed")
         
         logger.info(f"[Order {order_id}] - Credit card: verified")
+
+def clear_transaction_verification(order_id):
+    with grpc.insecure_channel('transaction_verification:50052') as channel:
+        stub = transaction_verification_grpc.TransactionVerificationServiceStub(channel)
+        stub.ClearOrder(transaction_verification.ContinuationRequest(order_id=order_id))

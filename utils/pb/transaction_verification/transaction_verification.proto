@@ -9,6 +9,7 @@ service TransactionVerificationService {
     rpc VerifyItems (ContinuationRequest) returns (VerificationResponse) {}
     rpc VerifyUserData (ContinuationRequest) returns (VerificationResponse) {}
     rpc VerifyCreditCard (ContinuationRequest) returns (VerificationResponse) {}
+    rpc ClearOrder (ContinuationRequest) returns (google.protobuf.Empty) {}
 }
 
 message InitializationRequest {
