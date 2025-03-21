@@ -14,6 +14,7 @@ import grpc
 import datetime
 import logging
 from concurrent import futures
+from google.protobuf import empty_pb2
 
 # Configure logging
 logging.basicConfig(
@@ -25,9 +26,61 @@ logger = logging.getLogger()
 
 # Class for transaction verification
 class TransactionVerificationService(TransactionVerificationServiceServicer):
-
     def __init__(self):
+        self.orders: dict[str, InitializationRequest] = {}
         logger.info("Transaction verification service initialized")
+
+    def InitOrder(self, request: InitializationRequest, _):
+        self.orders[request.order_id] = request
+        logger.info(f"[Order {request.order_id}] - Order initialized")
+        return empty_pb2.Empty()
+
+    def VerifyItems(self, request: ContinuationRequest, _):
+        logger.info(f"[Order {request.order_id}] - Item verification request received")
+
+        # Check if the order exists
+        if request.order_id not in self.orders:
+            logger.info(f"[Order {request.order_id}] - Order not found: item verification failed")
+            return VerificationResponse(verified=False)
+        
+        items = self.orders[request.order_id].items
+        
+        # Check if there are no items
+        if len(items) == 0:
+            logger.info(f"[Order {request.order_id}] - Order has no items: item verification failed")
+            return VerificationResponse(verified=False)
+        
+        # Check if there are no zero/negative quantity items
+        for item in items:
+            if item.quantity <= 0:
+                logger.info(f"[Order {request.order_id}] - Order has zero/negative quantity items: item verification failed")
+                return VerificationResponse(verified=False)
+            
+        logger.info(f"[Order {request.order_id}] - Item verification successful")
+        return VerificationResponse(verified=True)
+
+    def VerifyUserData(self, request: ContinuationRequest, _):
+        logger.info(f"[Order {request.order_id}] - User data verification request received")
+
+        # Check if the order exists
+        if request.order_id not in self.orders:
+            logger.info(f"[Order {request.order_id}] - Order not found: user data verification failed")
+            return VerificationResponse(verified=False)
+        
+        user = self.orders[request.order_id].user
+        
+        # Check if all user details are provided
+        if not user.name or not user.contact or not user.address:
+            logger.info(f"[Order {request.order_id}] - User details missing: user data verification failed")
+            return VerificationResponse(verified=False)
+        
+        # Check if all address details are provided
+        if not user.address.street or not user.address.city or not user.address.state or not user.address.zip or not user.address.country:
+            logger.info(f"[Order {request.order_id}] - Address details missing: user data verification failed")
+            return VerificationResponse(verified=False)
+        
+        logger.info(f"[Order {request.order_id}] - User data verification successful")
+        return VerificationResponse(verified=True)  
 
     def luhn_algorithm(self, credit_card):
         """
@@ -55,43 +108,33 @@ class TransactionVerificationService(TransactionVerificationServiceServicer):
         # Check if the sum is divisible by 10
         return sum % 10 == 0
 
-    def VerifyTransaction(self, request: TransactionVerificationRequest, _):
-        logger.info(f"[Order {request.orderId}] Received request for transaction verification")
+    def VerifyCreditCard(self, request: ContinuationRequest, _):
+        logger.info(f"[Order {request.order_id}] - Credit card verification request received")
 
-        # Perform simple transaction verification
-        if len(request.items) == 0:
-            logger.info(f"[Order {request.orderId}] no items - transaction verification failed")
-            return TransactionVerificationResponse(isVerified=False)
-
-        # Check if there are no zero quantity items
-        for item in request.items:
-            if item.quantity <= 0:
-                logger.info(f"[Order {request.orderId}] item with invalid quantity - transaction verification failed")
-                return TransactionVerificationResponse(isVerified=False)
-            
-        # Check if all user details are provided
-        if not request.user.name or not request.user.contact:
-            logger.info(f"[Order {request.orderId}] missing user details - transaction verification failed")
-            return TransactionVerificationResponse(isVerified=False)
-
-        # Check if credit card details are valid via Luhn algorithm
-        if not self.luhn_algorithm(request.creditCard.number):
-            logger.info(f"[Order {request.orderId}] invalid credit card number - transaction verification failed")
-            return TransactionVerificationResponse(isVerified=False)
+        # Check if the order exists
+        if request.order_id not in self.orders:
+            logger.info(f"[Order {request.order_id}] - Order not found: credit card verification failed")
+            return VerificationResponse(verified=False)
         
+        credit_card = self.orders[request.order_id].credit_card
+
         # Check if the credit card expiry date is valid
-        month, year = request.creditCard.expirationDate.split("/")
+        month, year = credit_card.expiration_date.split("/")
         if int(month) > 12 or int(month) < 1:
-            logger.info(f"[Order {request.orderId}] invalid credit card expiration date - transaction verification failed")
-            return TransactionVerificationResponse(isVerified=False)
+            logger.info(f"[Order {request.order_id}] - Invalid month in credit card expiration date: credit card verification failed")
+            return VerificationResponse(verified=False)
         
         if int("20" + year) < datetime.datetime.now().year or (int("20" + year) == datetime.datetime.now().year and int(month) < datetime.datetime.now().month):
-            logger.info(f"[Order {request.orderId}] expired credit card - transaction verification failed")
-            return TransactionVerificationResponse(isVerified=False)
-
-        # Verify transaction
-        logger.info(f"[Order {request.orderId}] has passed transaction verification")
-        return TransactionVerificationResponse(isVerified=True)
+            logger.info(f"[Order {request.order_id}] - Credit card expired: credit card verification failed")
+            return VerificationResponse(verified=False)
+        
+        # Check if the credit card number is valid via Luhn algorithm
+        if not self.luhn_algorithm(credit_card.number):
+            logger.info(f"[Order {request.order_id}] - Invalid credit card number: credit card verification failed")
+            return VerificationResponse(verified=False)
+        
+        logger.info(f"[Order {request.order_id}] - Credit card verification successful")
+        return VerificationResponse(verified=True)
 
 def serve():
     # Create a gRPC server

@@ -2,6 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 import suggestions_pb2 as suggestions__pb2
 
 
@@ -14,9 +15,14 @@ class SuggestionServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.getSuggestions = channel.unary_unary(
-                '/suggestions.SuggestionService/getSuggestions',
-                request_serializer=suggestions__pb2.SuggestionRequest.SerializeToString,
+        self.InitOrder = channel.unary_unary(
+                '/suggestions.SuggestionService/InitOrder',
+                request_serializer=suggestions__pb2.InitializationRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                )
+        self.SuggestBooks = channel.unary_unary(
+                '/suggestions.SuggestionService/SuggestBooks',
+                request_serializer=suggestions__pb2.ContinuationRequest.SerializeToString,
                 response_deserializer=suggestions__pb2.SuggestionResponse.FromString,
                 )
 
@@ -24,7 +30,13 @@ class SuggestionServiceStub(object):
 class SuggestionServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def getSuggestions(self, request, context):
+    def InitOrder(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SuggestBooks(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -33,9 +45,14 @@ class SuggestionServiceServicer(object):
 
 def add_SuggestionServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'getSuggestions': grpc.unary_unary_rpc_method_handler(
-                    servicer.getSuggestions,
-                    request_deserializer=suggestions__pb2.SuggestionRequest.FromString,
+            'InitOrder': grpc.unary_unary_rpc_method_handler(
+                    servicer.InitOrder,
+                    request_deserializer=suggestions__pb2.InitializationRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'SuggestBooks': grpc.unary_unary_rpc_method_handler(
+                    servicer.SuggestBooks,
+                    request_deserializer=suggestions__pb2.ContinuationRequest.FromString,
                     response_serializer=suggestions__pb2.SuggestionResponse.SerializeToString,
             ),
     }
@@ -49,7 +66,7 @@ class SuggestionService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def getSuggestions(request,
+    def InitOrder(request,
             target,
             options=(),
             channel_credentials=None,
@@ -59,8 +76,25 @@ class SuggestionService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/suggestions.SuggestionService/getSuggestions',
-            suggestions__pb2.SuggestionRequest.SerializeToString,
+        return grpc.experimental.unary_unary(request, target, '/suggestions.SuggestionService/InitOrder',
+            suggestions__pb2.InitializationRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SuggestBooks(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/suggestions.SuggestionService/SuggestBooks',
+            suggestions__pb2.ContinuationRequest.SerializeToString,
             suggestions__pb2.SuggestionResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
