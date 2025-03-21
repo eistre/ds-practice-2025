@@ -2,8 +2,9 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import fraud_detection_pb2 as fraud__detection__pb2
+from fraud_detection import fraud_detection_pb2 as fraud__detection_dot_fraud__detection__pb2
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
+from utils import utils_pb2 as utils_dot_utils__pb2
 
 
 class FraudDetectionServiceStub(object):
@@ -17,22 +18,22 @@ class FraudDetectionServiceStub(object):
         """
         self.InitOrder = channel.unary_unary(
                 '/fraud_detection.FraudDetectionService/InitOrder',
-                request_serializer=fraud__detection__pb2.InitializationRequest.SerializeToString,
+                request_serializer=fraud__detection_dot_fraud__detection__pb2.InitializationRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.CheckUserData = channel.unary_unary(
                 '/fraud_detection.FraudDetectionService/CheckUserData',
-                request_serializer=fraud__detection__pb2.ContinuationRequest.SerializeToString,
-                response_deserializer=fraud__detection__pb2.DetectionResponse.FromString,
+                request_serializer=utils_dot_utils__pb2.ContinuationRequest.SerializeToString,
+                response_deserializer=fraud__detection_dot_fraud__detection__pb2.DetectionResponse.FromString,
                 )
         self.CheckCreditCard = channel.unary_unary(
                 '/fraud_detection.FraudDetectionService/CheckCreditCard',
-                request_serializer=fraud__detection__pb2.ContinuationRequest.SerializeToString,
-                response_deserializer=fraud__detection__pb2.DetectionResponse.FromString,
+                request_serializer=utils_dot_utils__pb2.ContinuationRequest.SerializeToString,
+                response_deserializer=fraud__detection_dot_fraud__detection__pb2.DetectionResponse.FromString,
                 )
         self.ClearOrder = channel.unary_unary(
                 '/fraud_detection.FraudDetectionService/ClearOrder',
-                request_serializer=fraud__detection__pb2.ContinuationRequest.SerializeToString,
+                request_serializer=utils_dot_utils__pb2.ContinuationRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
 
@@ -69,22 +70,22 @@ def add_FraudDetectionServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'InitOrder': grpc.unary_unary_rpc_method_handler(
                     servicer.InitOrder,
-                    request_deserializer=fraud__detection__pb2.InitializationRequest.FromString,
+                    request_deserializer=fraud__detection_dot_fraud__detection__pb2.InitializationRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'CheckUserData': grpc.unary_unary_rpc_method_handler(
                     servicer.CheckUserData,
-                    request_deserializer=fraud__detection__pb2.ContinuationRequest.FromString,
-                    response_serializer=fraud__detection__pb2.DetectionResponse.SerializeToString,
+                    request_deserializer=utils_dot_utils__pb2.ContinuationRequest.FromString,
+                    response_serializer=fraud__detection_dot_fraud__detection__pb2.DetectionResponse.SerializeToString,
             ),
             'CheckCreditCard': grpc.unary_unary_rpc_method_handler(
                     servicer.CheckCreditCard,
-                    request_deserializer=fraud__detection__pb2.ContinuationRequest.FromString,
-                    response_serializer=fraud__detection__pb2.DetectionResponse.SerializeToString,
+                    request_deserializer=utils_dot_utils__pb2.ContinuationRequest.FromString,
+                    response_serializer=fraud__detection_dot_fraud__detection__pb2.DetectionResponse.SerializeToString,
             ),
             'ClearOrder': grpc.unary_unary_rpc_method_handler(
                     servicer.ClearOrder,
-                    request_deserializer=fraud__detection__pb2.ContinuationRequest.FromString,
+                    request_deserializer=utils_dot_utils__pb2.ContinuationRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
@@ -109,7 +110,7 @@ class FraudDetectionService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/fraud_detection.FraudDetectionService/InitOrder',
-            fraud__detection__pb2.InitializationRequest.SerializeToString,
+            fraud__detection_dot_fraud__detection__pb2.InitializationRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -126,8 +127,8 @@ class FraudDetectionService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/fraud_detection.FraudDetectionService/CheckUserData',
-            fraud__detection__pb2.ContinuationRequest.SerializeToString,
-            fraud__detection__pb2.DetectionResponse.FromString,
+            utils_dot_utils__pb2.ContinuationRequest.SerializeToString,
+            fraud__detection_dot_fraud__detection__pb2.DetectionResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -143,8 +144,8 @@ class FraudDetectionService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/fraud_detection.FraudDetectionService/CheckCreditCard',
-            fraud__detection__pb2.ContinuationRequest.SerializeToString,
-            fraud__detection__pb2.DetectionResponse.FromString,
+            utils_dot_utils__pb2.ContinuationRequest.SerializeToString,
+            fraud__detection_dot_fraud__detection__pb2.DetectionResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -160,7 +161,7 @@ class FraudDetectionService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/fraud_detection.FraudDetectionService/ClearOrder',
-            fraud__detection__pb2.ContinuationRequest.SerializeToString,
+            utils_dot_utils__pb2.ContinuationRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

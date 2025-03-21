@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package utils;
+
+message ContinuationRequest {
+    string order_id = 1;
+}
+
+message User {
+    string name = 1;
+    string contact = 2;
+    Address address = 3;
+}
+
+message Address {
+    string street = 1;
+    string city = 2;
+    string state = 3;
+    string zip = 4;
+    string country = 5;
+}
+
+message CreditCard {
+    string number = 1;
+    string expiration_date = 2;
+    string cvv = 3;
+}
+
+message Item {
+    string name = 1;
+    int32 quantity = 2;
+}

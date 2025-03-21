@@ -1,4 +1,5 @@
 from google.protobuf import empty_pb2 as _empty_pb2
+from utils import utils_pb2 as _utils_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
@@ -11,28 +12,14 @@ class InitializationRequest(_message.Message):
     ORDER_ID_FIELD_NUMBER: _ClassVar[int]
     ITEMS_FIELD_NUMBER: _ClassVar[int]
     order_id: str
-    items: _containers.RepeatedCompositeFieldContainer[Item]
-    def __init__(self, order_id: _Optional[str] = ..., items: _Optional[_Iterable[_Union[Item, _Mapping]]] = ...) -> None: ...
-
-class ContinuationRequest(_message.Message):
-    __slots__ = ("order_id",)
-    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
-    order_id: str
-    def __init__(self, order_id: _Optional[str] = ...) -> None: ...
+    items: _containers.RepeatedCompositeFieldContainer[_utils_pb2.Item]
+    def __init__(self, order_id: _Optional[str] = ..., items: _Optional[_Iterable[_Union[_utils_pb2.Item, _Mapping]]] = ...) -> None: ...
 
 class SuggestionResponse(_message.Message):
     __slots__ = ("books",)
     BOOKS_FIELD_NUMBER: _ClassVar[int]
     books: _containers.RepeatedCompositeFieldContainer[Book]
     def __init__(self, books: _Optional[_Iterable[_Union[Book, _Mapping]]] = ...) -> None: ...
-
-class Item(_message.Message):
-    __slots__ = ("name", "quantity")
-    NAME_FIELD_NUMBER: _ClassVar[int]
-    QUANTITY_FIELD_NUMBER: _ClassVar[int]
-    name: str
-    quantity: int
-    def __init__(self, name: _Optional[str] = ..., quantity: _Optional[int] = ...) -> None: ...
 
 class Book(_message.Message):
     __slots__ = ("book_id", "title", "author")

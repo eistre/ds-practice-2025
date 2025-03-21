@@ -2,11 +2,11 @@ import sys
 import os
 
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-suggestions_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions'))
+suggestions_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb'))
 sys.path.insert(0, suggestions_grpc_path)
-
-from suggestions_pb2 import *
-from suggestions_pb2_grpc import *
+from utils.utils_pb2 import *
+from suggestions.suggestions_pb2 import *
+from suggestions.suggestions_pb2_grpc import *
 
 import grpc
 import json
