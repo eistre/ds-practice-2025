@@ -20,7 +20,7 @@ from google.protobuf import empty_pb2
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format="[%(asctime)s] - [%(levelname)s] - [Thread %(thread)d] - %(message)s"
+    format="[%(asctime)s] - [%(levelname)s] - [Suggestions] - [Thread %(thread)d] - %(message)s"
 )
 
 logger = logging.getLogger()

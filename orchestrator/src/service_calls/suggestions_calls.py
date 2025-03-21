@@ -15,7 +15,7 @@ import suggestions_pb2_grpc as suggestions_grpc
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format="[%(asctime)s] - [%(levelname)s] - [Thread %(thread)d] - %(message)s"
+    format="[%(asctime)s] - [%(levelname)s] - [Orchestrator] - [Thread %(thread)d] - %(message)s"
 )
 
 logger = logging.getLogger()
