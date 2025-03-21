@@ -1,9 +1,9 @@
 import uuid
 import logging
 from concurrent import futures
-from service_calls.suggestions_calls import initialize_suggestions, get_book_suggestions
-from service_calls.fraud_detection_calls import initialize_fraud_detection, check_user_data, check_credit_card
-from service_calls.transaction_verification_calls import initialize_transaction_verification, verify_order_items, verify_user_data, verify_credit_card
+from service_calls.suggestions_calls import *
+from service_calls.fraud_detection_calls import *
+from service_calls.transaction_verification_calls import *
 
 # Configure logging
 logging.basicConfig(
@@ -93,8 +93,15 @@ def checkout():
             }, 500
     
     finally:
-        logger.info(f"[Order {order_id}] - Checkout request completed")
+        logger.info(f"[Order {order_id}] - Clearing service caches")
+        
+        with futures.ThreadPoolExecutor() as executor:
+            list(executor.map(
+                lambda f: f(order_id),
+                [clear_fraud_detection, clear_transaction_verification, clear_suggestions]
+            ))
 
+        logger.info(f"[Order {order_id}] - Checkout request completed")
 
 if __name__ == '__main__':
     # Run the app in debug mode to enable hot reloading.

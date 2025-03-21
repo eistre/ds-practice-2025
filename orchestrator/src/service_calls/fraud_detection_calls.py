@@ -66,3 +66,8 @@ def check_credit_card(order_id):
             raise Exception(order_id, "Credit card: fraud detected")
         
         logger.info(f"[Order {order_id}] - Credit card: not fraudulent")
+
+def clear_fraud_detection(order_id):
+    with grpc.insecure_channel('fraud_detection:50051') as channel:
+        stub = fraud_detection_grpc.FraudDetectionServiceStub(channel)
+        stub.ClearOrder(fraud_detection.ContinuationRequest(order_id=order_id))

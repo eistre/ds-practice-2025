@@ -38,3 +38,8 @@ def get_book_suggestions(order_id):
         logger.info(f"[Order {order_id}] - Suggested books: {[book.title for book in response.books]}")
 
         return response.books
+
+def clear_suggestions(order_id):
+    with grpc.insecure_channel('suggestions:50053') as channel:
+        stub = suggestions_grpc.SuggestionServiceStub(channel)
+        stub.ClearOrder(suggestions.ContinuationRequest(order_id=order_id))

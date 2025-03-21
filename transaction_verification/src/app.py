@@ -34,6 +34,12 @@ class TransactionVerificationService(TransactionVerificationServiceServicer):
         self.orders[request.order_id] = request
         logger.info(f"[Order {request.order_id}] - Order initialized")
         return empty_pb2.Empty()
+    
+    def ClearOrder(self, request: ContinuationRequest, _):
+        if request.order_id in self.orders:
+            del self.orders[request.order_id]
+            logger.info(f"[Order {request.order_id}] - Order cleared")
+        return empty_pb2.Empty()
 
     def VerifyItems(self, request: ContinuationRequest, _):
         logger.info(f"[Order {request.order_id}] - Item verification request received")
