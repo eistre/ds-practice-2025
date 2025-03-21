@@ -16,7 +16,7 @@ import fraud_detection_pb2_grpc as fraud_detection_grpc
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format="[%(asctime)s] - [%(levelname)s] - [Thread %(thread)d] - %(message)s"
+    format="[%(asctime)s] - [%(levelname)s] - [Orchestrator] - [Thread %(thread)d] - %(message)s"
 )
 
 logger = logging.getLogger()
