@@ -1,6 +1,7 @@
 import uuid
 import logging
 from concurrent import futures
+from service_calls.order_queue_calls import *
 from service_calls.suggestions_calls import *
 from service_calls.fraud_detection_calls import *
 from service_calls.transaction_verification_calls import *
@@ -62,6 +63,10 @@ def checkout():
 
             # 5) Get book suggestions (f) after (e)
             books, vector_clock = get_book_suggestions(order_id, vector_clock) #(f)
+
+            # 6) Insert order into order queue
+            insert_order_to_queue(request_data, order_id)
+
             return {
                 "orderId": order_id,
                 "status": "Order Approved",
