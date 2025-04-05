@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package order_queue;
+
+import "google/protobuf/empty.proto";
+import "utils/utils.proto";
+
+service OrderQueueService {
+    rpc Enqueue (EnqueueRequest) returns (EnqueueResponse) {}
+    rpc Dequeue (google.protobuf.Empty) returns (DequeueResponse) {}
+}
+
+message EnqueueRequest {
+    string order_id = 1;
+    utils.User user = 2;
+    repeated utils.Item items = 3;
+}
+
+message EnqueueResponse {
+    bool success = 1;
+}
+
+message DequeueResponse {
+    string order_id = 1;
+}
