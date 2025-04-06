@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package order_executor;
+
+import "google/protobuf/empty.proto";
+
+service OrderExecutorService {
+    rpc Ping (google.protobuf.Empty) returns (ExecutorResponse) {};
+    rpc Election (google.protobuf.Empty) returns (ExecutorResponse) {};
+    rpc Coordinator (google.protobuf.Empty) returns (google.protobuf.Empty) {};
+}
+
+message ExecutorResponse {
+    bool ok = 1;
+}
