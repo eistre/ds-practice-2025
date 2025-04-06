@@ -107,3 +107,17 @@ services:
     volumes:
       - ./utils:/app/utils
       - ./order_queue/src:/app/order_queue/src
+  order_executor:
+    build:
+      context: ./
+      dockerfile: ./order_executor/Dockerfile  # Path to your order_executor service Dockerfile
+    ports:
+      - "50055"  # Exposing port 50055 for order_executor service
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+      - PYTHONFILE=/app/order_executor/src/app.py  # Ensure you reference the correct entry point for the order_executor service
+    volumes:
+      - ./utils:/app/utils
+      - ./order_executor/src:/app/order_executor/src
+    deploy:
+      replicas: 3  # Scale the order_executor service to 3 replicas
