@@ -21,24 +21,25 @@ logging.basicConfig(
 
 logger = logging.getLogger()
 
-def initialize_suggestions(request, order_id):
+def initialize_suggestions(request, order_id, vector_clock):
     with grpc.insecure_channel('suggestions:50053') as channel:
         stub = suggestions_grpc.SuggestionServiceStub(channel)
         stub.InitOrder(suggestions.InitializationRequest(
             order_id=order_id,
             items=[
                 utils.Item(name=item["name"], quantity=item["quantity"]) for item in request["items"]
-            ]
+            ],
+            vector_clock=utils.VectorClock(clock=vector_clock)
         ))
 
-def get_book_suggestions(order_id):
+def get_book_suggestions(order_id,vector_clock):
     with grpc.insecure_channel('suggestions:50053') as channel:
         stub = suggestions_grpc.SuggestionServiceStub(channel)
-        response: suggestions.SuggestionResponse = stub.SuggestBooks(utils.ContinuationRequest(order_id=order_id))
+        response: suggestions.SuggestionResponse = stub.SuggestBooks(utils.ContinuationRequest(order_id=order_id,vector_clock=utils.VectorClock(clock=vector_clock)))
 
         logger.info(f"[Order {order_id}] - Suggested books: {[book.title for book in response.books]}")
 
-        return response.books
+        return response.books, response.vector_clock.clock
 
 def clear_suggestions(order_id):
     with grpc.insecure_channel('suggestions:50053') as channel:

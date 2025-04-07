@@ -1,14 +1,17 @@
+from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Optional, Union as _Union
+from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class ContinuationRequest(_message.Message):
-    __slots__ = ("order_id",)
+    __slots__ = ("order_id", "vector_clock")
     ORDER_ID_FIELD_NUMBER: _ClassVar[int]
+    VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
     order_id: str
-    def __init__(self, order_id: _Optional[str] = ...) -> None: ...
+    vector_clock: VectorClock
+    def __init__(self, order_id: _Optional[str] = ..., vector_clock: _Optional[_Union[VectorClock, _Mapping]] = ...) -> None: ...
 
 class User(_message.Message):
     __slots__ = ("name", "contact", "address")
@@ -51,3 +54,9 @@ class Item(_message.Message):
     name: str
     quantity: int
     def __init__(self, name: _Optional[str] = ..., quantity: _Optional[int] = ...) -> None: ...
+
+class VectorClock(_message.Message):
+    __slots__ = ("clock",)
+    CLOCK_FIELD_NUMBER: _ClassVar[int]
+    clock: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, clock: _Optional[_Iterable[int]] = ...) -> None: ...

@@ -7,17 +7,21 @@ from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Opti
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class InitializationRequest(_message.Message):
-    __slots__ = ("order_id", "user", "credit_card")
+    __slots__ = ("order_id", "user", "credit_card", "vector_clock")
     ORDER_ID_FIELD_NUMBER: _ClassVar[int]
     USER_FIELD_NUMBER: _ClassVar[int]
     CREDIT_CARD_FIELD_NUMBER: _ClassVar[int]
+    VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
     order_id: str
     user: _utils_pb2.User
     credit_card: _utils_pb2.CreditCard
-    def __init__(self, order_id: _Optional[str] = ..., user: _Optional[_Union[_utils_pb2.User, _Mapping]] = ..., credit_card: _Optional[_Union[_utils_pb2.CreditCard, _Mapping]] = ...) -> None: ...
+    vector_clock: _utils_pb2.VectorClock
+    def __init__(self, order_id: _Optional[str] = ..., user: _Optional[_Union[_utils_pb2.User, _Mapping]] = ..., credit_card: _Optional[_Union[_utils_pb2.CreditCard, _Mapping]] = ..., vector_clock: _Optional[_Union[_utils_pb2.VectorClock, _Mapping]] = ...) -> None: ...
 
 class DetectionResponse(_message.Message):
-    __slots__ = ("is_fraud",)
+    __slots__ = ("is_fraud", "vector_clock")
     IS_FRAUD_FIELD_NUMBER: _ClassVar[int]
+    VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
     is_fraud: bool
-    def __init__(self, is_fraud: bool = ...) -> None: ...
+    vector_clock: _utils_pb2.VectorClock
+    def __init__(self, is_fraud: bool = ..., vector_clock: _Optional[_Union[_utils_pb2.VectorClock, _Mapping]] = ...) -> None: ...
