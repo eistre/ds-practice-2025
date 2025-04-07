@@ -13,6 +13,14 @@ class ContinuationRequest(_message.Message):
     vector_clocks: _containers.RepeatedCompositeFieldContainer[VectorClock]
     def __init__(self, order_id: _Optional[str] = ..., vector_clocks: _Optional[_Iterable[_Union[VectorClock, _Mapping]]] = ...) -> None: ...
 
+class ClearRequest(_message.Message):
+    __slots__ = ("order_id", "vector_clock")
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
+    VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
+    order_id: str
+    vector_clock: VectorClock
+    def __init__(self, order_id: _Optional[str] = ..., vector_clock: _Optional[_Union[VectorClock, _Mapping]] = ...) -> None: ...
+
 class User(_message.Message):
     __slots__ = ("name", "contact", "address")
     NAME_FIELD_NUMBER: _ClassVar[int]

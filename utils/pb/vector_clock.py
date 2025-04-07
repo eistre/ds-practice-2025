@@ -13,3 +13,6 @@ class VectorClock:
 
     def get(self):
         return self.vc[:]
+    
+    def compare(self,incoming_vc):
+        return all(incoming_vc[i] >= self.vc[i] for i in range(len(self.vc)))

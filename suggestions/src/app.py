@@ -74,10 +74,13 @@ class SuggestionService(SuggestionServiceServicer):
         logger.info(f"[Order {request.order_id}] - Order initialized.")
         return empty_pb2.Empty()
     
-    def ClearOrder(self, request: ContinuationRequest, _):
-        if request.order_id in self.orders:
+    def ClearOrder(self, request: ClearRequest, _):
+        clock_check = self.orders[request.order_id]["vc"].compare(request.vector_clock.clock)
+        if request.order_id in self.orders and clock_check:
             del self.orders[request.order_id]
             logger.info(f"[Order {request.order_id}] - Order cleared")
+        else:
+            logger.info(f"[Order {request.order_id}] - Failed to clear order.")
         return empty_pb2.Empty()
 
     def SuggestBooks(self, request: ContinuationRequest, _):

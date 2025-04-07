@@ -16,7 +16,7 @@ from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from utils import utils_pb2 as utils_dot_utils__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dsuggestions/suggestions.proto\x12\x0bsuggestions\x1a\x1bgoogle/protobuf/empty.proto\x1a\x11utils/utils.proto\"E\n\x15InitializationRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x1a\n\x05items\x18\x02 \x03(\x0b\x32\x0b.utils.Item\"`\n\x12SuggestionResponse\x12 \n\x05\x62ooks\x18\x01 \x03(\x0b\x32\x11.suggestions.Book\x12(\n\x0cvector_clock\x18\x02 \x01(\x0b\x32\x12.utils.VectorClock\"6\n\x04\x42ook\x12\x0f\n\x07\x62ook_id\x18\x01 \x01(\t\x12\r\n\x05title\x18\x02 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x03 \x01(\t2\xf1\x01\n\x11SuggestionService\x12I\n\tInitOrder\x12\".suggestions.InitializationRequest\x1a\x16.google.protobuf.Empty\"\x00\x12M\n\x0cSuggestBooks\x12\x1a.utils.ContinuationRequest\x1a\x1f.suggestions.SuggestionResponse\"\x00\x12\x42\n\nClearOrder\x12\x1a.utils.ContinuationRequest\x1a\x16.google.protobuf.Empty\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dsuggestions/suggestions.proto\x12\x0bsuggestions\x1a\x1bgoogle/protobuf/empty.proto\x1a\x11utils/utils.proto\"E\n\x15InitializationRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x1a\n\x05items\x18\x02 \x03(\x0b\x32\x0b.utils.Item\"`\n\x12SuggestionResponse\x12 \n\x05\x62ooks\x18\x01 \x03(\x0b\x32\x11.suggestions.Book\x12(\n\x0cvector_clock\x18\x02 \x01(\x0b\x32\x12.utils.VectorClock\"6\n\x04\x42ook\x12\x0f\n\x07\x62ook_id\x18\x01 \x01(\t\x12\r\n\x05title\x18\x02 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x03 \x01(\t2\xea\x01\n\x11SuggestionService\x12I\n\tInitOrder\x12\".suggestions.InitializationRequest\x1a\x16.google.protobuf.Empty\"\x00\x12M\n\x0cSuggestBooks\x12\x1a.utils.ContinuationRequest\x1a\x1f.suggestions.SuggestionResponse\"\x00\x12;\n\nClearOrder\x12\x13.utils.ClearRequest\x1a\x16.google.protobuf.Empty\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -30,5 +30,5 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_BOOK']._serialized_start=263
   _globals['_BOOK']._serialized_end=317
   _globals['_SUGGESTIONSERVICE']._serialized_start=320
-  _globals['_SUGGESTIONSERVICE']._serialized_end=561
+  _globals['_SUGGESTIONSERVICE']._serialized_end=554
 # @@protoc_insertion_point(module_scope)

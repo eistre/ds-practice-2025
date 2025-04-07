@@ -38,7 +38,7 @@ class TransactionVerificationServiceStub(object):
                 )
         self.ClearOrder = channel.unary_unary(
                 '/transaction_verification.TransactionVerificationService/ClearOrder',
-                request_serializer=utils_dot_utils__pb2.ContinuationRequest.SerializeToString,
+                request_serializer=utils_dot_utils__pb2.ClearRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
 
@@ -101,7 +101,7 @@ def add_TransactionVerificationServiceServicer_to_server(servicer, server):
             ),
             'ClearOrder': grpc.unary_unary_rpc_method_handler(
                     servicer.ClearOrder,
-                    request_deserializer=utils_dot_utils__pb2.ContinuationRequest.FromString,
+                    request_deserializer=utils_dot_utils__pb2.ClearRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
@@ -194,7 +194,7 @@ class TransactionVerificationService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/transaction_verification.TransactionVerificationService/ClearOrder',
-            utils_dot_utils__pb2.ContinuationRequest.SerializeToString,
+            utils_dot_utils__pb2.ClearRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

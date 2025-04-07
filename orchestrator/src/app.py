@@ -31,7 +31,7 @@ def checkout():
     """
     Responds with a JSON object containing the order ID, status, and suggested books.
     """
-
+    vector_clock=[0,0,0]
     try:
         # Get request object data to json
         request_data = json.loads(request.data)
@@ -62,7 +62,6 @@ def checkout():
 
             # 5) Get book suggestions (f) after (e)
             books, vector_clock = get_book_suggestions(order_id, vector_clock) #(f)
-
             return {
                 "orderId": order_id,
                 "status": "Order Approved",
@@ -94,7 +93,7 @@ def checkout():
         
         with futures.ThreadPoolExecutor() as executor:
             list(executor.map(
-                lambda f: f(order_id),
+                lambda f: f(order_id,vector_clock),
                 [clear_fraud_detection, clear_transaction_verification, clear_suggestions]
             ))
 
