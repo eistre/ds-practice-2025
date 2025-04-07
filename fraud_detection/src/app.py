@@ -8,9 +8,9 @@ FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb'))
 sys.path.insert(0, fraud_detection_grpc_path)
 from utils.utils_pb2 import *
+from vector_clock import VectorClock as VC
 from fraud_detection.fraud_detection_pb2 import *
 from fraud_detection.fraud_detection_pb2_grpc import *
-from vector_clock import VectorClock as VC
 
 import grpc
 import json
@@ -77,19 +77,16 @@ AI_CREDIT_CARD = """
 
 # Class for fraud detection
 class FraudDetectionService(FraudDetectionServiceServicer):
-    def __init__(self,svc_idx=1,total_svcs=3):
+    def __init__(self, svc_idx=1, total_svcs=3):
         # Initialize google genai client
         self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
-        self.orders: dict[str, InitializationRequest] = {}
-        self.svc_idx =svc_idx
+        self.orders: dict[str, dict[str, InitializationRequest | VC]] = {}
+        self.svc_idx = svc_idx
         self.total_svcs = total_svcs
-        logger.info("Fraud detection service initialized.(index: {svc_idx}, total services: {total_svcs})")
+        logger.info(f"Fraud detection service initialized.(index: {svc_idx}, total services: {total_svcs})")
 
     def InitOrder(self, request: InitializationRequest, _):
-        vc = [0]*self.total_svcs
-        if request.vector_clock.clock:
-            vc = request.vector_clock.clock
-        self.orders[request.order_id] = {"data":request,"vc":vc}
+        self.orders[request.order_id] = {"data": request, "vc": VC(size=self.total_svcs)}
         logger.info(f"[Order {request.order_id}] - Order initialized.")
         return empty_pb2.Empty()
     
@@ -102,15 +99,14 @@ class FraudDetectionService(FraudDetectionServiceServicer):
     def CheckUserData(self, request: ContinuationRequest, _):
         logger.info(f"[Order {request.order_id}] - Received request for user data fraud detection")
 
-        incoming_vc = request.vector_clock.clock
-        vc = VC(size=self.total_svcs,clock=self.orders[request.order_id]["vc"])
-        vc.merge_and_increment(self.svc_idx,incoming_vc)
-        self.orders[request.order_id]["vc"] = vc.get() # saving the latest
-        logger.info(f"Vector clock (CheckUserData): {vc.get()}")
+        # Increment the vector clock
+        self.orders[request.order_id]["vc"].merge_and_increment(self.svc_idx, request.vector_clocks)
+        logger.info(f"Vector clock (CheckUserData): {self.orders[request.order_id]['vc'].get()}")
+
         # Check if the order exists
         if request.order_id not in self.orders:
             logger.info(f"[Order {request.order_id}] - Order not found - user data fraud detection failed")
-            return DetectionResponse(is_fraud=False,vector_clock=VectorClock(clock=vc.get()))
+            return DetectionResponse(is_fraud=False, vector_clock=VectorClock(clock=self.orders[request.order_id]["vc"].get()))
         
         user = self.orders[request.order_id]["data"].user
 
@@ -140,21 +136,18 @@ class FraudDetectionService(FraudDetectionServiceServicer):
         # Parse AI response
         ai_response: AIResponse = ai_response.parsed
         logger.info(f"[Order {request.order_id}] - User data fraud detection result: {'fraud' if ai_response.is_fraud else 'not fraudulent'}")
-        return DetectionResponse(is_fraud=ai_response.is_fraud,vector_clock=VectorClock(clock=vc.get()))
+        return DetectionResponse(is_fraud=ai_response.is_fraud, vector_clock=VectorClock(clock=self.orders[request.order_id]["vc"].get()))
     
     def CheckCreditCard(self, request: ContinuationRequest, _):
         logger.info(f"[Order {request.order_id}] - Received request for credit card fraud detection")
 
-        incoming_vc = request.vector_clock.clock
-        vc = VC(size=self.total_svcs,clock=self.orders[request.order_id]["vc"])
-        vc.merge_and_increment(self.svc_idx,incoming_vc)
-        self.orders[request.order_id]["vc"] = vc.get() # saving the latest
-        logger.info(f"Vector clock (CheckCreditCard): {vc.get()}")
+        self.orders[request.order_id]["vc"].merge_and_increment(self.svc_idx, request.vector_clocks)
+        logger.info(f"Vector clock (CheckCreditCard): {self.orders[request.order_id]['vc'].get()}")
 
         # Check if the order exists
         if request.order_id not in self.orders:
             logger.info(f"[Order {request.order_id}] - Order not found: credit card fraud detection failed")
-            return DetectionResponse(is_fraud=False,vector_clock=VectorClock(clock=vc.get()))
+            return DetectionResponse(is_fraud=False, vector_clock=VectorClock(clock=self.orders[request.order_id]["vc"].get()))
         
         credit_card = self.orders[request.order_id]["data"].credit_card
 
@@ -179,7 +172,7 @@ class FraudDetectionService(FraudDetectionServiceServicer):
         # Parse AI response
         ai_response: AIResponse = ai_response.parsed
         logger.info(f"[Order {request.order_id}] - Credit card fraud detection result: {'fraud' if ai_response.is_fraud else 'not fraudulent'}")
-        return DetectionResponse(is_fraud=ai_response.is_fraud, vector_clock=VectorClock(clock=vc.get()))
+        return DetectionResponse(is_fraud=ai_response.is_fraud, vector_clock=VectorClock(clock=self.orders[request.order_id]["vc"].get()))
 
 def serve():
     # Create a gRPC server

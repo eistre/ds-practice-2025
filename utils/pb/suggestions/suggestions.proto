@@ -14,7 +14,6 @@ service SuggestionService {
 message InitializationRequest {
     string order_id = 1;
     repeated utils.Item items = 2;
-    utils.VectorClock vector_clock = 3;
 }
 
 message SuggestionResponse {

@@ -16,7 +16,6 @@ message InitializationRequest {
     string order_id = 1;
     utils.User user = 2;
     utils.CreditCard credit_card = 3;
-    utils.VectorClock vector_clock = 4;
 }
 
 message DetectionResponse {

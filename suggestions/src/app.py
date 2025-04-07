@@ -5,9 +5,9 @@ FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 suggestions_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb'))
 sys.path.insert(0, suggestions_grpc_path)
 from utils.utils_pb2 import *
+from vector_clock import VectorClock as VC
 from suggestions.suggestions_pb2 import *
 from suggestions.suggestions_pb2_grpc import *
-from vector_clock import VectorClock as VC
 
 import grpc
 import json
@@ -61,20 +61,16 @@ AI_SUGGESTION_PROMPT = """
 """
 
 class SuggestionService(SuggestionServiceServicer):
-    def __init__(self,svc_idx=2,total_svcs=3):
+    def __init__(self, svc_idx=2, total_svcs=3):
         # Initialize google genai client
         self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
-        self.orders: dict[str, InitializationRequest] = {}
-        self.svc_idx =svc_idx
+        self.orders: dict[str, dict[str, InitializationRequest | VC]] = {}
+        self.svc_idx = svc_idx
         self.total_svcs = total_svcs
         logger.info(f"Suggestion service initialized.(index: {svc_idx}, total services: {total_svcs})")
 
     def InitOrder(self, request: InitializationRequest, _):
-        vc = [0]*self.total_svcs
-        if request.vector_clock.clock:
-            vc = request.vector_clock.clock
-
-        self.orders[request.order_id] = {"data":request,"vc":vc}
+        self.orders[request.order_id] = {"data": request, "vc": VC(size=self.total_svcs)}
         logger.info(f"[Order {request.order_id}] - Order initialized.")
         return empty_pb2.Empty()
     
@@ -87,17 +83,14 @@ class SuggestionService(SuggestionServiceServicer):
     def SuggestBooks(self, request: ContinuationRequest, _):
         logger.info(f"[Order {request.order_id}] - Book suggestion request received")
         
-        #Increment vector clock
-        incoming_vc = request.vector_clock.clock
-        vc = VC(size=self.total_svcs,clock=self.orders[request.order_id]["vc"])
-        vc.merge_and_increment(self.svc_idx,incoming_vc)
-        self.orders[request.order_id]["vc"] = vc.get() # saving the latest
-        logger.info(f"Vector clock (SuggestBooks): {vc.get()}")
+        # Increment the vector clock
+        self.orders[request.order_id]["vc"].merge_and_increment(self.svc_idx, request.vector_clocks)
+        logger.info(f"Vector clock (SuggestBooks): {self.orders[request.order_id]['vc'].get()}")
 
         # Check if the order exists
         if request.order_id not in self.orders:
             logger.info(f"[Order {request.order_id}] - Order not found: book suggestion failed")
-            return SuggestionResponse(books=[],vector_clock=vc)
+            return SuggestionResponse(books=[], vector_clock=VectorClock(clock=self.orders[request.order_id]["vc"].get()))
         
         items = self.orders[request.order_id]["data"].items
 
@@ -123,7 +116,9 @@ class SuggestionService(SuggestionServiceServicer):
         return SuggestionResponse(
             books = [
                 Book(book_id=str(random.randint(3, 100)), title=book.title, author=book.author) for book in ai_response.suggested_books
-            ], vector_clock=VectorClock(clock=vc.get()))
+            ],
+            vector_clock=VectorClock(clock=self.orders[request.order_id]["vc"].get())
+        )
 
 def serve():
     # Create a gRPC server

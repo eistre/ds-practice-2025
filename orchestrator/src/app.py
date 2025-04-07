@@ -39,34 +39,29 @@ def checkout():
         # Generate a unique order ID
         order_id = str(uuid.uuid4())
         logger.info(f"[Order {order_id}] - Checkout request received")
-        vector_clock = [0, 0, 0] 
-        logger.info(f"[Order {order_id}] - Initial vector clock: {vector_clock}")
-
 
         with futures.ThreadPoolExecutor() as executor:
             # 1) Tell each service to initialize (cache) this order
             logger.info(f"[Order {order_id}] - Initializing service caches")
 
             list(executor.map(
-                lambda f: f(request_data, order_id,vector_clock),
+                lambda f: f(request_data, order_id),
                 [initialize_fraud_detection, initialize_transaction_verification, initialize_suggestions]
             ))
 
             # 2) Verify order items (a) and ensure that the user data is filled (b)
-            verify_order_items_future = executor.submit(verify_order_items, order_id,vector_clock) #(a)
-            verify_user_data_future = executor.submit(verify_user_data, order_id,vector_clock) #(b)
+            verify_order_items_future = executor.submit(verify_order_items, order_id) #(a)
+            verify_user_data_future = executor.submit(verify_user_data, order_id) #(b)
 
             # 3) Verify credit card data (c) after (a) and check user data for fraud (d) after (b)
-            verify_credit_card_future = executor.submit(verify_credit_card, order_id, verify_order_items_future,vector_clock) #(c)
-            check_user_data_future = executor.submit(check_user_data, order_id, verify_user_data_future,vector_clock) #(d)
+            verify_credit_card_future = executor.submit(verify_credit_card, order_id, verify_order_items_future) #(c)
+            check_user_data_future = executor.submit(check_user_data, order_id, verify_user_data_future) #(d)
 
             # 4) Check credit card for fraud (e) after (c) and (d)
-            vector_clock = verify_credit_card_future.result()
-            vector_clock = check_user_data_future.result()
+            vector_clock = check_credit_card(order_id, [verify_credit_card_future.result(), check_user_data_future.result()]) #(e)
 
-            vector_clock = check_credit_card(order_id,vector_clock)
             # 5) Get book suggestions (f) after (e)
-            books, vector_clock = get_book_suggestions(order_id,vector_clock) #(f)
+            books, vector_clock = get_book_suggestions(order_id, vector_clock) #(f)
 
             return {
                 "orderId": order_id,
