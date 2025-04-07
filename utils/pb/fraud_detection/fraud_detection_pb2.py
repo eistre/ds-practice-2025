@@ -16,17 +16,17 @@ from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from utils import utils_pb2 as utils_dot_utils__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n%fraud_detection/fraud_detection.proto\x12\x0f\x66raud_detection\x1a\x1bgoogle/protobuf/empty.proto\x1a\x11utils/utils.proto\"\x96\x01\n\x15InitializationRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x19\n\x04user\x18\x02 \x01(\x0b\x32\x0b.utils.User\x12&\n\x0b\x63redit_card\x18\x03 \x01(\x0b\x32\x11.utils.CreditCard\x12(\n\x0cvector_clock\x18\x04 \x01(\x0b\x32\x12.utils.VectorClock\"O\n\x11\x44\x65tectionResponse\x12\x10\n\x08is_fraud\x18\x01 \x01(\x08\x12(\n\x0cvector_clock\x18\x02 \x01(\x0b\x32\x12.utils.VectorClock2\xd2\x02\n\x15\x46raudDetectionService\x12M\n\tInitOrder\x12&.fraud_detection.InitializationRequest\x1a\x16.google.protobuf.Empty\"\x00\x12Q\n\rCheckUserData\x12\x1a.utils.ContinuationRequest\x1a\".fraud_detection.DetectionResponse\"\x00\x12S\n\x0f\x43heckCreditCard\x12\x1a.utils.ContinuationRequest\x1a\".fraud_detection.DetectionResponse\"\x00\x12\x42\n\nClearOrder\x12\x1a.utils.ContinuationRequest\x1a\x16.google.protobuf.Empty\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n%fraud_detection/fraud_detection.proto\x12\x0f\x66raud_detection\x1a\x1bgoogle/protobuf/empty.proto\x1a\x11utils/utils.proto\"l\n\x15InitializationRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x19\n\x04user\x18\x02 \x01(\x0b\x32\x0b.utils.User\x12&\n\x0b\x63redit_card\x18\x03 \x01(\x0b\x32\x11.utils.CreditCard\"O\n\x11\x44\x65tectionResponse\x12\x10\n\x08is_fraud\x18\x01 \x01(\x08\x12(\n\x0cvector_clock\x18\x02 \x01(\x0b\x32\x12.utils.VectorClock2\xd2\x02\n\x15\x46raudDetectionService\x12M\n\tInitOrder\x12&.fraud_detection.InitializationRequest\x1a\x16.google.protobuf.Empty\"\x00\x12Q\n\rCheckUserData\x12\x1a.utils.ContinuationRequest\x1a\".fraud_detection.DetectionResponse\"\x00\x12S\n\x0f\x43heckCreditCard\x12\x1a.utils.ContinuationRequest\x1a\".fraud_detection.DetectionResponse\"\x00\x12\x42\n\nClearOrder\x12\x1a.utils.ContinuationRequest\x1a\x16.google.protobuf.Empty\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'fraud_detection.fraud_detection_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_INITIALIZATIONREQUEST']._serialized_start=107
-  _globals['_INITIALIZATIONREQUEST']._serialized_end=257
-  _globals['_DETECTIONRESPONSE']._serialized_start=259
-  _globals['_DETECTIONRESPONSE']._serialized_end=338
-  _globals['_FRAUDDETECTIONSERVICE']._serialized_start=341
-  _globals['_FRAUDDETECTIONSERVICE']._serialized_end=679
+  _globals['_INITIALIZATIONREQUEST']._serialized_start=106
+  _globals['_INITIALIZATIONREQUEST']._serialized_end=214
+  _globals['_DETECTIONRESPONSE']._serialized_start=216
+  _globals['_DETECTIONRESPONSE']._serialized_end=295
+  _globals['_FRAUDDETECTIONSERVICE']._serialized_start=298
+  _globals['_FRAUDDETECTIONSERVICE']._serialized_end=636
 # @@protoc_insertion_point(module_scope)

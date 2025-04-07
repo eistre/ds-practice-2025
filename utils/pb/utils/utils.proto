@@ -4,7 +4,7 @@ package utils;
 
 message ContinuationRequest {
     string order_id = 1;
-    VectorClock vector_clock = 2;
+    repeated VectorClock vector_clocks = 2;
 }
 
 message User {

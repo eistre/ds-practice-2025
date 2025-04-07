@@ -22,7 +22,7 @@ logging.basicConfig(
 
 logger = logging.getLogger()
 
-def initialize_fraud_detection(request, order_id,vector_clock):
+def initialize_fraud_detection(request, order_id):
     with grpc.insecure_channel('fraud_detection:50051') as channel:
         stub = fraud_detection_grpc.FraudDetectionServiceStub(channel)
         stub.InitOrder(fraud_detection.InitializationRequest(
@@ -42,17 +42,19 @@ def initialize_fraud_detection(request, order_id,vector_clock):
                 number=request["creditCard"]["number"],
                 expiration_date=request["creditCard"]["expirationDate"],
                 cvv=request["creditCard"]["cvv"]
-            ),
-            vector_clock=utils.VectorClock(clock=vector_clock)
+            )
         ))
 
-def check_user_data(order_id, verify_user_data_future: futures.Future[None],vector_clock):
+def check_user_data(order_id, verify_user_data_future: futures.Future[list[int]]):
     # Wait for user data to be verified
     vector_clock = verify_user_data_future.result()
     
     with grpc.insecure_channel('fraud_detection:50051') as channel:
         stub = fraud_detection_grpc.FraudDetectionServiceStub(channel)
-        response: fraud_detection.DetectionResponse = stub.CheckUserData(utils.ContinuationRequest(order_id=order_id,vector_clock=utils.VectorClock(clock=vector_clock)))
+        response: fraud_detection.DetectionResponse = stub.CheckUserData(utils.ContinuationRequest(
+            order_id=order_id,
+            vector_clocks=[utils.VectorClock(clock=vector_clock)]
+        ))
 
         if response.is_fraud:
             raise Exception(order_id, "User data: fraud detected")
@@ -60,10 +62,13 @@ def check_user_data(order_id, verify_user_data_future: futures.Future[None],vect
         logger.info(f"[Order {order_id}] - User data: not fraudulent")
         return response.vector_clock.clock
 
-def check_credit_card(order_id,vector_clock):
+def check_credit_card(order_id, vector_clocks):
     with grpc.insecure_channel('fraud_detection:50051') as channel:
         stub = fraud_detection_grpc.FraudDetectionServiceStub(channel)
-        response: fraud_detection.DetectionResponse = stub.CheckCreditCard(utils.ContinuationRequest(order_id=order_id,vector_clock=utils.VectorClock(clock=vector_clock)))
+        response: fraud_detection.DetectionResponse = stub.CheckCreditCard(utils.ContinuationRequest(
+            order_id=order_id,
+            vector_clocks=[utils.VectorClock(clock=vector_clock) for vector_clock in vector_clocks]
+        ))
 
         if response.is_fraud:
             raise Exception(order_id, "Credit card: fraud detected")

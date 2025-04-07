@@ -8,14 +8,12 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class InitializationRequest(_message.Message):
-    __slots__ = ("order_id", "items", "vector_clock")
+    __slots__ = ("order_id", "items")
     ORDER_ID_FIELD_NUMBER: _ClassVar[int]
     ITEMS_FIELD_NUMBER: _ClassVar[int]
-    VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
     order_id: str
     items: _containers.RepeatedCompositeFieldContainer[_utils_pb2.Item]
-    vector_clock: _utils_pb2.VectorClock
-    def __init__(self, order_id: _Optional[str] = ..., items: _Optional[_Iterable[_Union[_utils_pb2.Item, _Mapping]]] = ..., vector_clock: _Optional[_Union[_utils_pb2.VectorClock, _Mapping]] = ...) -> None: ...
+    def __init__(self, order_id: _Optional[str] = ..., items: _Optional[_Iterable[_Union[_utils_pb2.Item, _Mapping]]] = ...) -> None: ...
 
 class SuggestionResponse(_message.Message):
     __slots__ = ("books", "vector_clock")
