@@ -4,6 +4,7 @@ package utils;
 
 message ContinuationRequest {
     string order_id = 1;
+    VectorClock vector_clock = 2;
 }
 
 message User {
@@ -29,4 +30,7 @@ message CreditCard {
 message Item {
     string name = 1;
     int32 quantity = 2;
+}
+message VectorClock {
+    repeated int32 clock = 1;
 }

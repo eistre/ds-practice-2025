@@ -7,6 +7,7 @@ sys.path.insert(0, suggestions_grpc_path)
 from utils.utils_pb2 import *
 from suggestions.suggestions_pb2 import *
 from suggestions.suggestions_pb2_grpc import *
+from vector_clock import VectorClock as VC
 
 import grpc
 import json
@@ -60,15 +61,21 @@ AI_SUGGESTION_PROMPT = """
 """
 
 class SuggestionService(SuggestionServiceServicer):
-    def __init__(self):
+    def __init__(self,svc_idx=2,total_svcs=3):
         # Initialize google genai client
         self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
         self.orders: dict[str, InitializationRequest] = {}
-        logger.info("Suggestion service initialized")
+        self.svc_idx =svc_idx
+        self.total_svcs = total_svcs
+        logger.info(f"Suggestion service initialized.(index: {svc_idx}, total services: {total_svcs})")
 
     def InitOrder(self, request: InitializationRequest, _):
-        self.orders[request.order_id] = request
-        logger.info(f"[Order {request.order_id}] - Order initialized")
+        vc = [0]*self.total_svcs
+        if request.vector_clock.clock:
+            vc = request.vector_clock.clock
+
+        self.orders[request.order_id] = {"data":request,"vc":vc}
+        logger.info(f"[Order {request.order_id}] - Order initialized.")
         return empty_pb2.Empty()
     
     def ClearOrder(self, request: ContinuationRequest, _):
@@ -79,13 +86,20 @@ class SuggestionService(SuggestionServiceServicer):
 
     def SuggestBooks(self, request: ContinuationRequest, _):
         logger.info(f"[Order {request.order_id}] - Book suggestion request received")
+        
+        #Increment vector clock
+        incoming_vc = request.vector_clock.clock
+        vc = VC(size=self.total_svcs,clock=self.orders[request.order_id]["vc"])
+        vc.merge_and_increment(self.svc_idx,incoming_vc)
+        self.orders[request.order_id]["vc"] = vc.get() # saving the latest
+        logger.info(f"Vector clock (SuggestBooks): {vc.get()}")
 
         # Check if the order exists
         if request.order_id not in self.orders:
             logger.info(f"[Order {request.order_id}] - Order not found: book suggestion failed")
-            return SuggestionResponse(books=[])
+            return SuggestionResponse(books=[],vector_clock=vc)
         
-        items = self.orders[request.order_id].items
+        items = self.orders[request.order_id]["data"].items
 
         # Generate AI response
         ai_response = self.client.models.generate_content(
@@ -109,8 +123,7 @@ class SuggestionService(SuggestionServiceServicer):
         return SuggestionResponse(
             books = [
                 Book(book_id=str(random.randint(3, 100)), title=book.title, author=book.author) for book in ai_response.suggested_books
-            ]
-        )
+            ], vector_clock=VectorClock(clock=vc.get()))
 
 def serve():
     # Create a gRPC server

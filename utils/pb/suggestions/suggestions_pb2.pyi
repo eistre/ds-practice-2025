@@ -8,18 +8,22 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class InitializationRequest(_message.Message):
-    __slots__ = ("order_id", "items")
+    __slots__ = ("order_id", "items", "vector_clock")
     ORDER_ID_FIELD_NUMBER: _ClassVar[int]
     ITEMS_FIELD_NUMBER: _ClassVar[int]
+    VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
     order_id: str
     items: _containers.RepeatedCompositeFieldContainer[_utils_pb2.Item]
-    def __init__(self, order_id: _Optional[str] = ..., items: _Optional[_Iterable[_Union[_utils_pb2.Item, _Mapping]]] = ...) -> None: ...
+    vector_clock: _utils_pb2.VectorClock
+    def __init__(self, order_id: _Optional[str] = ..., items: _Optional[_Iterable[_Union[_utils_pb2.Item, _Mapping]]] = ..., vector_clock: _Optional[_Union[_utils_pb2.VectorClock, _Mapping]] = ...) -> None: ...
 
 class SuggestionResponse(_message.Message):
-    __slots__ = ("books",)
+    __slots__ = ("books", "vector_clock")
     BOOKS_FIELD_NUMBER: _ClassVar[int]
+    VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
     books: _containers.RepeatedCompositeFieldContainer[Book]
-    def __init__(self, books: _Optional[_Iterable[_Union[Book, _Mapping]]] = ...) -> None: ...
+    vector_clock: _utils_pb2.VectorClock
+    def __init__(self, books: _Optional[_Iterable[_Union[Book, _Mapping]]] = ..., vector_clock: _Optional[_Union[_utils_pb2.VectorClock, _Mapping]] = ...) -> None: ...
 
 class Book(_message.Message):
     __slots__ = ("book_id", "title", "author")

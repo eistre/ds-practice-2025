@@ -18,8 +18,10 @@ message InitializationRequest {
     utils.User user = 2;
     repeated utils.Item items = 3;
     utils.CreditCard credit_card = 4;
+    utils.VectorClock vector_clock = 5;
 }
 
 message VerificationResponse {
     bool verified = 1;
+    utils.VectorClock vector_clock = 2;
 }
