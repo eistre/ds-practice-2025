@@ -46,12 +46,13 @@ class OrderExecutorService(OrderExecutorServiceServicer):
         self.leader = None
         self.leader_lock = threading.RLock()
         self.leader_election = False
+        self.leader_election_lock = threading.RLock()
 
         # Schedule order execution
         threading.Thread(target=self.run, daemon=True).start()
 
         # Schedule leader monitoring after a short delay
-        monitor_thread = threading.Timer(1 + 5 * random.random(), self.monitor_leader)
+        monitor_thread = threading.Timer(1 + 10 * random.random(), self.monitor_leader)
         monitor_thread.daemon = True
         monitor_thread.start()
 
@@ -72,14 +73,15 @@ class OrderExecutorService(OrderExecutorServiceServicer):
             
         time.sleep(1.5) # Wait a bit to avoid redundant elections
 
-        # If election already concluded in another thread, return
-        if not self.leader_election:
-            return
-        
-        with self.leader_lock:
-            self.leader_election = False
-            self.leader = (self.id_ip[0], self.id_ip[1])
-            logger.info(f"I am the new leader: {self.leader[0]}")
+        with self.leader_election_lock:
+            # If election already concluded in another thread, return
+            if not self.leader_election:
+                return
+            
+            with self.leader_lock:
+                self.leader_election = False
+                self.leader = (self.id_ip[0], self.id_ip[1])
+                logger.info(f"I am the new leader: {self.leader[0]}")
 
         def send_coordinator_message(peer):
             try:
@@ -131,7 +133,7 @@ class OrderExecutorService(OrderExecutorServiceServicer):
 
     def monitor_leader(self):
         while True:
-            with self.leader_lock:
+            with self.leader_lock, self.leader_election_lock:
                 leader_election = self.leader_election
                 leader = self.leader
 
@@ -146,14 +148,14 @@ class OrderExecutorService(OrderExecutorServiceServicer):
             elif leader[0] != self.id_ip[0]:
                 # Check if the leader is alive
                 try:
-                    with grpc.insecure_channel(f"{self.leader[1]}:50055") as channel:
+                    with grpc.insecure_channel(f"{leader[1]}:50055") as channel:
                         stub = OrderExecutorServiceStub(channel)
                         response: ExecutorResponse = stub.Ping(empty_pb2.Empty(), timeout=3)
 
                         if not response.ok:
                             raise grpc.RpcError()
                 except grpc.RpcError:
-                    logger.warning(f"Leader {self.leader[0]} is down - starting leader election")
+                    logger.warning(f"Leader {leader[0]} is down - starting leader election")
 
                     with self.leader_lock:
                         self.leader = None
@@ -183,7 +185,10 @@ class OrderExecutorService(OrderExecutorServiceServicer):
             self.discover_peers()
 
         # Continue the leader election process
-        threading.Thread(target=self.start_leader_election, daemon=True).start()
+        with self.leader_election_lock:
+            if not self.leader_election:
+                logger.debug(f"Continuing leader election...")
+                threading.Thread(target=self.start_leader_election, daemon=True).start()
 
         return ExecutorResponse(ok=True)
 
@@ -191,7 +196,7 @@ class OrderExecutorService(OrderExecutorServiceServicer):
         peer = context.peer().lstrip('ipv4:').split(':')[0]
         logger.debug(f"Received coordinator request from {get_hash(peer)}")
 
-        with self.leader_lock:
+        with self.leader_lock, self.leader_election_lock:
             self.leader = (get_hash(peer), peer)
             self.leader_election = False
             logger.info(f"New leader elected: {self.leader[0]}")
