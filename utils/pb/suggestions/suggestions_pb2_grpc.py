@@ -28,7 +28,7 @@ class SuggestionServiceStub(object):
                 )
         self.ClearOrder = channel.unary_unary(
                 '/suggestions.SuggestionService/ClearOrder',
-                request_serializer=utils_dot_utils__pb2.ContinuationRequest.SerializeToString,
+                request_serializer=utils_dot_utils__pb2.ClearRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
 
@@ -69,7 +69,7 @@ def add_SuggestionServiceServicer_to_server(servicer, server):
             ),
             'ClearOrder': grpc.unary_unary_rpc_method_handler(
                     servicer.ClearOrder,
-                    request_deserializer=utils_dot_utils__pb2.ContinuationRequest.FromString,
+                    request_deserializer=utils_dot_utils__pb2.ClearRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
@@ -128,7 +128,7 @@ class SuggestionService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/suggestions.SuggestionService/ClearOrder',
-            utils_dot_utils__pb2.ContinuationRequest.SerializeToString,
+            utils_dot_utils__pb2.ClearRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

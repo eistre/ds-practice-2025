@@ -76,7 +76,7 @@ def check_credit_card(order_id, vector_clocks):
         logger.info(f"[Order {order_id}] - Credit card: not fraudulent")
         return response.vector_clock.clock
 
-def clear_fraud_detection(order_id):
+def clear_fraud_detection(order_id,vector_clock):
     with grpc.insecure_channel('fraud_detection:50051') as channel:
         stub = fraud_detection_grpc.FraudDetectionServiceStub(channel)
-        stub.ClearOrder(utils.ContinuationRequest(order_id=order_id))
+        stub.ClearOrder(utils.ClearRequest(order_id=order_id,vector_clock=utils.VectorClock(clock=vector_clock)))

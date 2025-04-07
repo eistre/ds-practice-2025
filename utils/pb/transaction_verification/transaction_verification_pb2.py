@@ -16,7 +16,7 @@ from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from utils import utils_pb2 as utils_dot_utils__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n7transaction_verification/transaction_verification.proto\x12\x18transaction_verification\x1a\x1bgoogle/protobuf/empty.proto\x1a\x11utils/utils.proto\"\x88\x01\n\x15InitializationRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x19\n\x04user\x18\x02 \x01(\x0b\x32\x0b.utils.User\x12\x1a\n\x05items\x18\x03 \x03(\x0b\x32\x0b.utils.Item\x12&\n\x0b\x63redit_card\x18\x04 \x01(\x0b\x32\x11.utils.CreditCard\"R\n\x14VerificationResponse\x12\x10\n\x08verified\x18\x01 \x01(\x08\x12(\n\x0cvector_clock\x18\x02 \x01(\x0b\x32\x12.utils.VectorClock2\xdb\x03\n\x1eTransactionVerificationService\x12V\n\tInitOrder\x12/.transaction_verification.InitializationRequest\x1a\x16.google.protobuf.Empty\"\x00\x12[\n\x0bVerifyItems\x12\x1a.utils.ContinuationRequest\x1a..transaction_verification.VerificationResponse\"\x00\x12^\n\x0eVerifyUserData\x12\x1a.utils.ContinuationRequest\x1a..transaction_verification.VerificationResponse\"\x00\x12`\n\x10VerifyCreditCard\x12\x1a.utils.ContinuationRequest\x1a..transaction_verification.VerificationResponse\"\x00\x12\x42\n\nClearOrder\x12\x1a.utils.ContinuationRequest\x1a\x16.google.protobuf.Empty\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n7transaction_verification/transaction_verification.proto\x12\x18transaction_verification\x1a\x1bgoogle/protobuf/empty.proto\x1a\x11utils/utils.proto\"\x88\x01\n\x15InitializationRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x19\n\x04user\x18\x02 \x01(\x0b\x32\x0b.utils.User\x12\x1a\n\x05items\x18\x03 \x03(\x0b\x32\x0b.utils.Item\x12&\n\x0b\x63redit_card\x18\x04 \x01(\x0b\x32\x11.utils.CreditCard\"R\n\x14VerificationResponse\x12\x10\n\x08verified\x18\x01 \x01(\x08\x12(\n\x0cvector_clock\x18\x02 \x01(\x0b\x32\x12.utils.VectorClock2\xd4\x03\n\x1eTransactionVerificationService\x12V\n\tInitOrder\x12/.transaction_verification.InitializationRequest\x1a\x16.google.protobuf.Empty\"\x00\x12[\n\x0bVerifyItems\x12\x1a.utils.ContinuationRequest\x1a..transaction_verification.VerificationResponse\"\x00\x12^\n\x0eVerifyUserData\x12\x1a.utils.ContinuationRequest\x1a..transaction_verification.VerificationResponse\"\x00\x12`\n\x10VerifyCreditCard\x12\x1a.utils.ContinuationRequest\x1a..transaction_verification.VerificationResponse\"\x00\x12;\n\nClearOrder\x12\x13.utils.ClearRequest\x1a\x16.google.protobuf.Empty\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -28,5 +28,5 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_VERIFICATIONRESPONSE']._serialized_start=272
   _globals['_VERIFICATIONRESPONSE']._serialized_end=354
   _globals['_TRANSACTIONVERIFICATIONSERVICE']._serialized_start=357
-  _globals['_TRANSACTIONVERIFICATIONSERVICE']._serialized_end=832
+  _globals['_TRANSACTIONVERIFICATIONSERVICE']._serialized_end=825
 # @@protoc_insertion_point(module_scope)

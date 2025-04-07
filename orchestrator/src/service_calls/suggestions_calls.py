@@ -43,7 +43,7 @@ def get_book_suggestions(order_id, vector_clock):
 
         return response.books, response.vector_clock.clock
 
-def clear_suggestions(order_id):
+def clear_suggestions(order_id,vector_clock):
     with grpc.insecure_channel('suggestions:50053') as channel:
         stub = suggestions_grpc.SuggestionServiceStub(channel)
-        stub.ClearOrder(utils.ContinuationRequest(order_id=order_id))
+        stub.ClearOrder(utils.ClearRequest(order_id=order_id,vector_clock=utils.VectorClock(clock=vector_clock)))

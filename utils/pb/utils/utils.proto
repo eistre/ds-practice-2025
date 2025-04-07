@@ -7,6 +7,11 @@ message ContinuationRequest {
     repeated VectorClock vector_clocks = 2;
 }
 
+message ClearRequest {
+    string order_id = 1;
+    VectorClock vector_clock = 2;
+}
+
 message User {
     string name = 1;
     string contact = 2;

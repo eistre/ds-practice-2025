@@ -8,7 +8,7 @@ import "utils/utils.proto";
 service SuggestionService {
     rpc InitOrder (InitializationRequest) returns (google.protobuf.Empty) {}
     rpc SuggestBooks (utils.ContinuationRequest) returns (SuggestionResponse) {}
-    rpc ClearOrder (utils.ContinuationRequest) returns (google.protobuf.Empty) {}
+    rpc ClearOrder (utils.ClearRequest) returns (google.protobuf.Empty) {}
 }
 
 message InitializationRequest {
