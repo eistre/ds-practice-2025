@@ -64,8 +64,7 @@ def checkout():
             vector_clock = verify_credit_card_future.result()
             vector_clock = check_user_data_future.result()
 
-            check_credit_card_future = executor.submit(check_credit_card,order_id,vector_clock) #(e)
-            vector_clock = check_credit_card_future.result()
+            vector_clock = check_credit_card(order_id,vector_clock)
             # 5) Get book suggestions (f) after (e)
             books, vector_clock = get_book_suggestions(order_id,vector_clock) #(f)
 
