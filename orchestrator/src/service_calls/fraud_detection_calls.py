@@ -57,7 +57,7 @@ def check_user_data(order_id, verify_user_data_future: futures.Future[list[int]]
         ))
 
         if response.is_fraud:
-            raise Exception(order_id, "User data: fraud detected")
+            raise Exception(order_id,response.vector_clock.clock, "User data: fraud detected")
         
         logger.info(f"[Order {order_id}] - User data: not fraudulent")
         return response.vector_clock.clock
@@ -71,7 +71,7 @@ def check_credit_card(order_id, vector_clocks):
         ))
 
         if response.is_fraud:
-            raise Exception(order_id, "Credit card: fraud detected")
+            raise Exception(order_id,response.vector_clock.clock, "Credit card: fraud detected")
         
         logger.info(f"[Order {order_id}] - Credit card: not fraudulent")
         return response.vector_clock.clock

@@ -57,7 +57,7 @@ def verify_order_items(order_id):
         ))
 
         if not response.verified:
-            raise Exception(order_id, f"[Order {order_id}] - Order items: verification failed")
+            raise Exception(order_id,response.vector_clock.clock, f"[Order {order_id}] - Order items: verification failed")
         
         logger.info(f"[Order {order_id}] - Order items: verified")
         return response.vector_clock.clock
@@ -71,7 +71,7 @@ def verify_user_data(order_id):
         ))
 
         if not response.verified:
-            raise Exception(order_id, f"[Order {order_id}] - User data: verification failed")
+            raise Exception(order_id,response.vector_clock.clock, f"[Order {order_id}] - User data: verification failed")
 
         logger.info(f"[Order {order_id}] - User data: verified")
         return response.vector_clock.clock
@@ -88,7 +88,7 @@ def verify_credit_card(order_id, verify_order_items_future: futures.Future[list[
         ))
         
         if not response.verified:
-            raise Exception(order_id, f"[Order {order_id}] - Credit card: verification failed")
+            raise Exception(order_id,response.vector_clock.clock, f"[Order {order_id}] - Credit card: verification failed")
         
         logger.info(f"[Order {order_id}] - Credit card: verified")
         return response.vector_clock.clock
