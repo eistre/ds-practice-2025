@@ -44,8 +44,11 @@ class TransactionVerificationService(TransactionVerificationServiceServicer):
         if request.order_id in self.orders and clock_check:
             del self.orders[request.order_id]
             logger.info(f"[Order {request.order_id}] - Order cleared")
+        elif not clock_check:
+            logger.error(f"[Order {request.order_id}] - Failed to clear order. Service clock: {self.orders[request.order_id]['vc'].get()} , Incoming clock: {request.vector_clock.clock} ")
         else:
-            logger.error(f"[Order {request.order_id}] - Failed to clear order.")
+            logger.error(f"[Order {request.order_id}] - Failed to clear order. Order not found.")
+        
         return empty_pb2.Empty()
 
     def VerifyItems(self, request: ContinuationRequest, _):
