@@ -80,7 +80,7 @@ class SuggestionService(SuggestionServiceServicer):
             del self.orders[request.order_id]
             logger.info(f"[Order {request.order_id}] - Order cleared")
         else:
-            logger.info(f"[Order {request.order_id}] - Failed to clear order.")
+            logger.error(f"[Order {request.order_id}] - Failed to clear order.")
         return empty_pb2.Empty()
 
     def SuggestBooks(self, request: ContinuationRequest, _):

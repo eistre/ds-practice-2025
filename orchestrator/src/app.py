@@ -71,7 +71,8 @@ def checkout():
     except Exception as error:
         # Order related errors
         if error.args[0] == order_id:
-            logger.info(f"[Order {order_id}] - {error.args[1]}")
+            logger.error(f"[Order {order_id}] - {error.args[2]}")
+            vector_clock = error.args[1]
             return {
                 "orderId": order_id,
                 "status": "Order Rejected",
@@ -81,6 +82,7 @@ def checkout():
         # Other errors
         else:
             logger.error(f"[Order {order_id}] - An error occurred: {error.args[0]}")
+            vector_clock = [0,0,0]
             return {
                 "error": {
                     "code": 500,
