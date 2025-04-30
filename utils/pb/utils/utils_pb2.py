@@ -12,27 +12,34 @@ from google.protobuf.internal import builder as _builder
 _sym_db = _symbol_database.Default()
 
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11utils/utils.proto\x12\x05utils\"R\n\x13\x43ontinuationRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12)\n\rvector_clocks\x18\x02 \x03(\x0b\x32\x12.utils.VectorClock\"J\n\x0c\x43learRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12(\n\x0cvector_clock\x18\x02 \x01(\x0b\x32\x12.utils.VectorClock\"F\n\x04User\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontact\x18\x02 \x01(\t\x12\x1f\n\x07\x61\x64\x64ress\x18\x03 \x01(\x0b\x32\x0e.utils.Address\"T\n\x07\x41\x64\x64ress\x12\x0e\n\x06street\x18\x01 \x01(\t\x12\x0c\n\x04\x63ity\x18\x02 \x01(\t\x12\r\n\x05state\x18\x03 \x01(\t\x12\x0b\n\x03zip\x18\x04 \x01(\t\x12\x0f\n\x07\x63ountry\x18\x05 \x01(\t\"B\n\nCreditCard\x12\x0e\n\x06number\x18\x01 \x01(\t\x12\x17\n\x0f\x65xpiration_date\x18\x02 \x01(\t\x12\x0b\n\x03\x63vv\x18\x03 \x01(\t\"&\n\x04Item\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x10\n\x08quantity\x18\x02 \x01(\x05\"\x1c\n\x0bVectorClock\x12\r\n\x05\x63lock\x18\x01 \x03(\x05\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11utils/utils.proto\x12\x05utils\x1a\x1bgoogle/protobuf/empty.proto\"R\n\x13\x43ontinuationRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12)\n\rvector_clocks\x18\x02 \x03(\x0b\x32\x12.utils.VectorClock\"J\n\x0c\x43learRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12(\n\x0cvector_clock\x18\x02 \x01(\x0b\x32\x12.utils.VectorClock\"F\n\x04User\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontact\x18\x02 \x01(\t\x12\x1f\n\x07\x61\x64\x64ress\x18\x03 \x01(\x0b\x32\x0e.utils.Address\"T\n\x07\x41\x64\x64ress\x12\x0e\n\x06street\x18\x01 \x01(\t\x12\x0c\n\x04\x63ity\x18\x02 \x01(\t\x12\r\n\x05state\x18\x03 \x01(\t\x12\x0b\n\x03zip\x18\x04 \x01(\t\x12\x0f\n\x07\x63ountry\x18\x05 \x01(\t\"B\n\nCreditCard\x12\x0e\n\x06number\x18\x01 \x01(\t\x12\x17\n\x0f\x65xpiration_date\x18\x02 \x01(\t\x12\x0b\n\x03\x63vv\x18\x03 \x01(\t\"&\n\x04Item\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x10\n\x08quantity\x18\x02 \x01(\x05\"\x1c\n\x0bVectorClock\x12\r\n\x05\x63lock\x18\x01 \x03(\x05\"\x1a\n\x0cPingResponse\x12\n\n\x02ok\x18\x01 \x01(\x08\"\x1e\n\x10\x45lectionResponse\x12\n\n\x02ok\x18\x01 \x01(\x08\x32\xce\x01\n\x15LeaderElectionService\x12\x35\n\x04Ping\x12\x16.google.protobuf.Empty\x1a\x13.utils.PingResponse\"\x00\x12=\n\x08\x45lection\x12\x16.google.protobuf.Empty\x1a\x17.utils.ElectionResponse\"\x00\x12?\n\x0b\x43oordinator\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'utils.utils_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_CONTINUATIONREQUEST']._serialized_start=28
-  _globals['_CONTINUATIONREQUEST']._serialized_end=110
-  _globals['_CLEARREQUEST']._serialized_start=112
-  _globals['_CLEARREQUEST']._serialized_end=186
-  _globals['_USER']._serialized_start=188
-  _globals['_USER']._serialized_end=258
-  _globals['_ADDRESS']._serialized_start=260
-  _globals['_ADDRESS']._serialized_end=344
-  _globals['_CREDITCARD']._serialized_start=346
-  _globals['_CREDITCARD']._serialized_end=412
-  _globals['_ITEM']._serialized_start=414
-  _globals['_ITEM']._serialized_end=452
-  _globals['_VECTORCLOCK']._serialized_start=454
-  _globals['_VECTORCLOCK']._serialized_end=482
+  _globals['_CONTINUATIONREQUEST']._serialized_start=57
+  _globals['_CONTINUATIONREQUEST']._serialized_end=139
+  _globals['_CLEARREQUEST']._serialized_start=141
+  _globals['_CLEARREQUEST']._serialized_end=215
+  _globals['_USER']._serialized_start=217
+  _globals['_USER']._serialized_end=287
+  _globals['_ADDRESS']._serialized_start=289
+  _globals['_ADDRESS']._serialized_end=373
+  _globals['_CREDITCARD']._serialized_start=375
+  _globals['_CREDITCARD']._serialized_end=441
+  _globals['_ITEM']._serialized_start=443
+  _globals['_ITEM']._serialized_end=481
+  _globals['_VECTORCLOCK']._serialized_start=483
+  _globals['_VECTORCLOCK']._serialized_end=511
+  _globals['_PINGRESPONSE']._serialized_start=513
+  _globals['_PINGRESPONSE']._serialized_end=539
+  _globals['_ELECTIONRESPONSE']._serialized_start=541
+  _globals['_ELECTIONRESPONSE']._serialized_end=571
+  _globals['_LEADERELECTIONSERVICE']._serialized_start=574
+  _globals['_LEADERELECTIONSERVICE']._serialized_end=780
 # @@protoc_insertion_point(module_scope)

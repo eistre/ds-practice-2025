@@ -1,3 +1,4 @@
+from google.protobuf import empty_pb2 as _empty_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
@@ -68,3 +69,15 @@ class VectorClock(_message.Message):
     CLOCK_FIELD_NUMBER: _ClassVar[int]
     clock: _containers.RepeatedScalarFieldContainer[int]
     def __init__(self, clock: _Optional[_Iterable[int]] = ...) -> None: ...
+
+class PingResponse(_message.Message):
+    __slots__ = ("ok",)
+    OK_FIELD_NUMBER: _ClassVar[int]
+    ok: bool
+    def __init__(self, ok: bool = ...) -> None: ...
+
+class ElectionResponse(_message.Message):
+    __slots__ = ("ok",)
+    OK_FIELD_NUMBER: _ClassVar[int]
+    ok: bool
+    def __init__(self, ok: bool = ...) -> None: ...
