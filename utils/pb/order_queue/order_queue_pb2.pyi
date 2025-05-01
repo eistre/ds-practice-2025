@@ -24,7 +24,9 @@ class EnqueueResponse(_message.Message):
     def __init__(self, success: bool = ...) -> None: ...
 
 class DequeueResponse(_message.Message):
-    __slots__ = ("order_id",)
+    __slots__ = ("order_id", "items")
     ORDER_ID_FIELD_NUMBER: _ClassVar[int]
+    ITEMS_FIELD_NUMBER: _ClassVar[int]
     order_id: str
-    def __init__(self, order_id: _Optional[str] = ...) -> None: ...
+    items: _containers.RepeatedCompositeFieldContainer[_utils_pb2.Item]
+    def __init__(self, order_id: _Optional[str] = ..., items: _Optional[_Iterable[_Union[_utils_pb2.Item, _Mapping]]] = ...) -> None: ...

@@ -22,4 +22,5 @@ message EnqueueResponse {
 
 message DequeueResponse {
     string order_id = 1;
+    repeated utils.Item items = 2;
 }

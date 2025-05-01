@@ -9,6 +9,8 @@ order_executor_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb
 sys.path.insert(0, order_executor_grpc_path)
 from order_queue.order_queue_pb2 import *
 from order_queue.order_queue_pb2_grpc import *
+from books_database.books_database_pb2 import *
+from books_database.books_database_pb2_grpc import *
 from leader_election_service import LeaderElectionService
 from utils.utils_pb2_grpc import add_LeaderElectionServiceServicer_to_server
 
@@ -35,6 +37,51 @@ class OrderExecutorService(LeaderElectionService):
         # Schedule order execution
         threading.Thread(target=self.run, daemon=True).start()
 
+    def decrement_stock(self, book):
+        with grpc.insecure_channel('books_database:50056') as channel:
+            response: WriteResponse = BooksDatabaseStub(channel).DecrementStock(WriteRequest(
+                title=book.name,
+                quantity=book.quantity
+            ))
+
+            return book.name, response.success
+        
+    def increment_stock(self, book):
+        with grpc.insecure_channel('books_database:50056') as channel:
+            response: WriteResponse = BooksDatabaseStub(channel).IncrementStock(WriteRequest(
+                title=book.name,
+                quantity=book.quantity
+            ))
+
+            return book.name, response.success
+
+    def execute_order(self, order: DequeueResponse):
+        # Use ThreadPoolExecutor to handle multiple stock decrements concurrently
+        logger.info(f"[Order {order.order_id}] - Decrementing stock for order items...")
+        with futures.ThreadPoolExecutor() as executor:
+            results = list(executor.map(
+                self.decrement_stock,
+                order.items
+            ))
+
+        # Check if all stock decrements were successful
+        if all(result[1] for result in results):
+            return True
+
+        # If any stock decrement failed, increment the stock back
+        logger.error(f"[Order {order.order_id}] - Not enough stock to execute order. Rolling back...")
+        with futures.ThreadPoolExecutor() as executor:
+            results = executor.map(
+                self.increment_stock,
+                [book for book in order.items if (book.name, True) in results]
+            )
+
+        # Check if all stock increments were successful
+        if not all(result[1] for result in results):
+            logger.error(f"[Order {order.order_id}] - Something went wrong rolling back")
+
+        return False
+
     def run(self):
         while True:
             # If I'm the leader, execute orders
@@ -45,10 +92,12 @@ class OrderExecutorService(LeaderElectionService):
 
                     if response.order_id and response.order_id != "":
                         # Simulate order execution
-                        logger.info(f"[Order {response.order_id}] - Order is being executed...")
-
-                        # After executing continue to next order
-                        continue
+                        logger.info(f"[Order {response.order_id}] - Executing order...")
+                        
+                        if self.execute_order(response):
+                            logger.info(f"[Order {response.order_id}] - Order executed successfully")
+                        else:
+                            logger.warning(f"[Order {response.order_id}] - Not enough stock to execute order")
 
             # If I'm not the leader or no orders were found, sleep for a while before checking again
             time.sleep(5)
