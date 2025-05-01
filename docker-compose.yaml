@@ -121,3 +121,18 @@ services:
       - ./order_executor/src:/app/order_executor/src
     deploy:
       replicas: 3  # Scale the order_executor service to 3 replicas
+
+  books_database:
+    build:
+      context: ./
+      dockerfile: ./books_database/Dockerfile  # Path to your books_database service Dockerfile
+    ports:
+      - "50056"  # Exposing port 50056 for books_database service
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+      - PYTHONFILE=/app/books_database/src/app.py  # Ensure you reference the correct entry point for the books_database service
+    volumes:
+      - ./utils:/app/utils
+      - ./books_database/src:/app/books_database/src
+    deploy:
+      replicas: 3  # Scale the books_database service to 3 replicas
