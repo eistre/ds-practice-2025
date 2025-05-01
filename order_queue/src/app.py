@@ -57,7 +57,7 @@ class OrderQueueService(OrderQueueServiceServicer):
             request_priority = self._generate_priority(request)
 
             # Put the order in the queue
-            self._queue.put((request_priority, request.order_id))
+            self._queue.put((request_priority, (request.order_id, request.items)))
             logger.info(f"[Order {request.order_id}] - Order enqueued")
 
             return EnqueueResponse(success=True)
@@ -69,10 +69,13 @@ class OrderQueueService(OrderQueueServiceServicer):
                 return DequeueResponse(order_id="")
         
             # Pop the order with the highest priority
-            order_id = self._queue.get()
-            logger.info(f"[Order {order_id[1]}] - Order dequeued")
+            order = self._queue.get()
+            logger.info(f"[Order {order[1][0]}] - Order dequeued")
 
-            return DequeueResponse(order_id=order_id[1])
+            return DequeueResponse(
+                order_id=order[1][0],
+                items=[Item(name=item.name, quantity=item.quantity) for item in order[1][1]]
+            )
     
 def serve():
     # Create a gRPC server
