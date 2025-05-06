@@ -28,6 +28,12 @@ Vector clocks are used in Fraud Detection, Transaction Verification, and Suggest
 
 The Order Executor service processes the queued orders by the Order Queue service for final execution. To ensure high availability and fault tolerance, the Order Executor runs with multiple replicas using a leader election mechanism based on the Bully Algorithm. This approach allows the system to automatically detect and recover from failures while also avoiding duplicate order processing, as only the leader replica executes orders.
 
+## Consistency Protocol Diagram
+![Consistency Protocol Diagram](./consistency_protocol_diagram.png)
+
+
+## Distributed Commitment Protocol Diagram
+![Distributed Commitment Protocol Diagram](./distributed_commitment_protocol_diagram.png)
 ## Vector Clocks Diagram
 
 ![Vector clocks diagram](./vector_clocks_diagram.png)
