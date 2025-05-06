@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package payment;
+
+import "google/protobuf/empty.proto";
+
+
+service PaymentService {
+    rpc Prepare (PaymentRequest) returns (PrepareResponse) {}
+    rpc Commit (PaymentRequest) returns (CommitResponse) {}
+    rpc Abort (PaymentRequest) returns (AbortResponse) {}
+}
+
+message PaymentRequest {
+    string order_id = 1;
+    double amount = 2;
+}
+
+message PrepareResponse {
+    bool ready = 1;
+}
+
+message CommitResponse {
+    bool success = 1;
+}
+
+message AbortResponse {
+    bool aborted = 1;
+}

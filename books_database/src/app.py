@@ -138,7 +138,7 @@ class BooksDatabase(BooksDatabaseServicer, LeaderElectionService):
         current_stock = self.read(request.title)
         
         if current_stock - request.quantity < 0:
-            logger.warning(f"[{request.title}] - Not enough stock to decrement")
+            logger.warning(f"[{request.title}] - Not enough stock to decrement. Current stock: {current_stock} , Requested : {request.quantity}")
             return WriteResponse(success=False)
         
         return self.Write(WriteRequest(
@@ -146,6 +146,29 @@ class BooksDatabase(BooksDatabaseServicer, LeaderElectionService):
             quantity=current_stock - request.quantity
         ), context)
 
+
+    def Prepare(self, request, context):
+        for update in request.updates:
+            logger.info(f"[{update.title}] - Preparing write of {update.quantity}")
+        self.prepared = [(update.title, update.quantity) for update in request.updates]
+        return PrepareResponse(ready=True)
+    
+    def Commit(self, request, context):
+        for update in request.updates:
+            logger.info(f"[{update.title}] - Committing write")
+        if hasattr(self, 'prepared'):
+            for title, quantity in self.prepared:
+                self.write(title, quantity)
+            del self.prepared
+        return CommitResponse(success=True)
+    
+    def Abort(self, request, context):
+        for update in request.updates:
+            logger.info(f"[{update.title}] - Aborting write")
+        if hasattr(self, 'prepared'):
+            del self.prepared
+        return AbortResponse(aborted=True)
+        
 def serve():
     # Create a gRPC server
     server = grpc.server(futures.ThreadPoolExecutor())

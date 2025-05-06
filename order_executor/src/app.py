@@ -1,6 +1,7 @@
 import sys
 import os
 
+
 # This set of lines are needed to import the gRPC stubs.
 # The path of the stubs is relative to the current file, or absolute inside the container.
 # Change these lines only if strictly needed.
@@ -11,6 +12,8 @@ from order_queue.order_queue_pb2 import *
 from order_queue.order_queue_pb2_grpc import *
 from books_database.books_database_pb2 import *
 from books_database.books_database_pb2_grpc import *
+from payment.payment_pb2 import PaymentRequest
+from payment.payment_pb2_grpc import PaymentServiceStub
 from leader_election_service import LeaderElectionService
 from utils.utils_pb2_grpc import add_LeaderElectionServiceServicer_to_server
 
@@ -82,6 +85,63 @@ class OrderExecutorService(LeaderElectionService):
 
         return False
 
+    def two_phase_commit(self, order: DequeueResponse):
+        logger.info(f"[Order {order.order_id}] - Starting 2PC")
+
+        book_prepared = False
+        payment_prepared = False
+
+        try:
+            with grpc.insecure_channel("books_database:50056") as books_channel, \
+                grpc.insecure_channel("payment:50057") as payment_channel:
+
+                books_stub = BooksDatabaseStub(books_channel)
+                payment_stub = PaymentServiceStub(payment_channel)
+
+                # Send Prepare to Books
+                book_prepare_resp = books_stub.Prepare(TransactionRequest(
+                    order_id=order.order_id,
+                    updates=[WriteRequest(title=item.name, quantity=item.quantity) for item in order.items]
+                ))
+
+                # Send Prepare to Payment
+                payment_prepare_resp = payment_stub.Prepare(PaymentRequest(
+                    order_id=order.order_id,
+                    amount=sum(item.quantity for item in order.items) * 5 # just a dummy amount, each book costs 5
+                ))
+
+                book_prepared = book_prepare_resp.ready
+                payment_prepared = payment_prepare_resp.ready
+
+            # If both prepared, commit
+            if book_prepared and payment_prepared:
+                logger.info(f"[Order {order.order_id}] - Both services ready. COMMITTING...")
+
+                with grpc.insecure_channel("books_database:50056") as books_channel, \
+                    grpc.insecure_channel("payment:50057") as payment_channel:
+
+                    BooksDatabaseStub(books_channel).Commit(TransactionRequest(order_id=order.order_id, updates=[WriteRequest(title=item.name, quantity=item.quantity) for item in order.items]))
+                    PaymentServiceStub(payment_channel).Commit(PaymentRequest(order_id=order.order_id))
+
+                return True
+
+            raise Exception("One or more participants not ready")
+
+        except Exception as e:
+            logger.warning(f"[Order {order.order_id}] - ABORTING: {e}")
+
+            if book_prepared:
+                with grpc.insecure_channel("books_database:50056") as books_channel:
+                    BooksDatabaseStub(books_channel).Abort(TransactionRequest(order_id=order.order_id, 
+                                                                              updates=[WriteRequest(title=item.name, quantity=item.quantity) for item in order.items]))
+
+            if payment_prepared:
+                with grpc.insecure_channel("payment:50057") as payment_channel:
+                    PaymentServiceStub(payment_channel).Abort(PaymentRequest(order_id=order.order_id))
+
+            return False
+ 
+
     def run(self):
         while True:
             # If I'm the leader, execute orders
@@ -94,10 +154,11 @@ class OrderExecutorService(LeaderElectionService):
                         # Simulate order execution
                         logger.info(f"[Order {response.order_id}] - Executing order...")
                         
-                        if self.execute_order(response):
+                        #if self.execute_order(response):
+                        if self.two_phase_commit(response):
                             logger.info(f"[Order {response.order_id}] - Order executed successfully")
                         else:
-                            logger.warning(f"[Order {response.order_id}] - Not enough stock to execute order")
+                            logger.warning(f"[Order {response.order_id}] - Not enough stock to execute order") ## Shows still successful in frontend ??? 
 
             # If I'm not the leader or no orders were found, sleep for a while before checking again
             time.sleep(5)

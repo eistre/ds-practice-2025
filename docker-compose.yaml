@@ -136,3 +136,16 @@ services:
       - ./books_database/src:/app/books_database/src
     deploy:
       replicas: 3  # Scale the books_database service to 3 replicas
+
+  payment:
+    build:
+      context: ./
+      dockerfile: ./payment/Dockerfile  # Path to your payment service Dockerfile
+    ports:
+      - "50057"  # Exposing port 50057 for payment service
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+      - PYTHONFILE=/app/payment/src/app.py  # entry point for the payment service
+    volumes:
+      - ./utils:/app/utils
+      - ./payment/src:/app/payment/src
