@@ -24,6 +24,7 @@ message ReadResponse {
 message WriteRequest {
     string title = 1;
     int32 quantity = 2;
+    string order_id = 3;
 }
 
 message WriteResponse {

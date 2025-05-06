@@ -37,8 +37,9 @@ class BooksDatabase(BooksDatabaseServicer, LeaderElectionService):
         # Initialize store with some sample data
         self.store: dict[str, Book] = {
             "Book A": Book(title="Book A", stock=10),
-            "Book B": Book(title="Book B", stock=3),
+            "Book B": Book(title="Book B", stock=1),
         }
+        self.temp_updates = {}
 
         super().__init__(service_name="books_database", port="50056", logger=logger)
         logger.info(f"Books Database is initialized with ID: {self.id_ip[0]}")
@@ -49,12 +50,12 @@ class BooksDatabase(BooksDatabaseServicer, LeaderElectionService):
         
         with self.store[title].lock:
             return self.store[title].stock
-        
+      
     def write(self, title, new_stock):
         with (book := self.store.get(title, Book(title, 0))).lock:
             book.stock = new_stock
             self.store[title] = book
-
+    
     def Read(self, request: ReadRequest, _):
         logger.info(f"[{request.title}] - Read request received")
         return ReadResponse(stock=self.read(request.title))
@@ -69,7 +70,7 @@ class BooksDatabase(BooksDatabaseServicer, LeaderElectionService):
 
             logger.warning(f"[{request.title}] - Failed to send write request to {peer_ip}:50056")
             return False
-    
+    ''' 
     def Write(self, request: WriteRequest, context):
         peer = context.peer().lstrip("ipv4:").split(":")[0]
 
@@ -123,7 +124,8 @@ class BooksDatabase(BooksDatabaseServicer, LeaderElectionService):
         else:
             logger.error(f"Something went wrong with the write request")
             return WriteResponse(success=False)
-    
+    '''
+    '''
     def IncrementStock(self, request: WriteRequest, context):
         # Increment the stock of the book
         current_stock = self.read(request.title)
@@ -132,7 +134,8 @@ class BooksDatabase(BooksDatabaseServicer, LeaderElectionService):
             title=request.title,
             quantity=current_stock + request.quantity
         ), context)
-            
+    '''  
+    '''
     def DecrementStock(self, request: WriteRequest, context):
         # Decrement the stock of the book
         current_stock = self.read(request.title)
@@ -143,6 +146,85 @@ class BooksDatabase(BooksDatabaseServicer, LeaderElectionService):
         
         return self.Write(WriteRequest(
             title=request.title,
+            quantity=current_stock - request.quantity
+        ), context)
+    '''
+
+
+    def prepare_write(self,order_id, title, new_stock):
+        if order_id not in self.temp_updates:
+            self.temp_updates[order_id] = []
+
+        self.temp_updates[order_id].append({'book': title, 'quantity': new_stock})
+
+    def Prepare_write(self,request:WriteRequest,context):
+        peer = context.peer().lstrip("ipv4:").split(":")[0]
+
+        # Wait for the leader election to finish
+        self.monitor_event.wait()
+        
+        # Check if the current instance is the leader
+        if self.leader[0] == self.id_ip[0]:
+            logger.info(f"[{request.title}] - Received write request - propagating to followers")
+
+            # Write to the local store
+            self.prepare_write(order_id=request.order_id, title=request.title, new_stock=request.quantity)
+
+            # Propagate the write to followers
+            with futures.ThreadPoolExecutor() as executor:
+                    responses = executor.map(
+                        lambda x: self.send_prepare_write(request, x),
+                        self.peers.values()
+                    )
+
+            # Check if all followers acknowledged the write
+            if all(responses):
+                logger.info(f"[{request.title}] - All followers acknowledged the write")
+                return WriteResponse(success=True)
+            else:
+                logger.warning(f"[{request.title}] - Not all followers acknowledged the write")
+                return WriteResponse(success=False)
+        
+        # If the current instance is a follower and the message came from the leader
+        elif self.leader[0] != self.id_ip[0] and peer == self.leader[1]:
+            logger.debug(f"[{request.title}] - Received write request - writing to local store")
+
+            # Write to the local store
+            self.prepare_write(order_id=request.order_id, title=request.title, new_stock=request.quantity)
+            return WriteResponse(success=True)
+        
+        # If the current instance is a follower and the message came from a non-leader
+        elif self.leader[0] != self.id_ip[0] and peer != self.leader[1]:
+            # Forward the write request to the leader
+            logger.info(f"[{request.title}] - Received write request - forwarding to leader")
+
+            try:
+                with grpc.insecure_channel(f"{self.leader[1]}:50056") as channel:
+                    return BooksDatabaseStub(channel).Write(request)
+            except Exception:
+                logger.warning(f"[{request.title}] - Failed to send write request to {self.leader[1]}:50056")
+                return WriteResponse(success=False)
+        else:
+            logger.error(f"Something went wrong with the write request")
+            return WriteResponse(success=False)
+
+    def PrepareIncrementStock(self,request:WriteRequest,context):
+        current_stock = self.read(request.title)
+
+        return self.Prepare_write(WriteRequest(
+            title=request.title, order_id = request.order_id,
+            quantity=current_stock + request.quantity
+        ), context)
+
+    def PrepareDecrementStock(self,request:WriteRequest,context):
+        current_stock = self.read(request.title)
+        
+        if current_stock - request.quantity < 0:
+            logger.warning(f"[{request.title}] - Not enough stock to decrement. Current stock: {current_stock} , Requested : {request.quantity}")
+            return WriteResponse(success=False)
+        
+        return self.Prepare_write(WriteRequest(
+            title=request.title,order_id = request.order_id,
             quantity=current_stock - request.quantity
         ), context)
 

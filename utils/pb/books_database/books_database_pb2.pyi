@@ -18,12 +18,14 @@ class ReadResponse(_message.Message):
     def __init__(self, stock: _Optional[int] = ...) -> None: ...
 
 class WriteRequest(_message.Message):
-    __slots__ = ("title", "quantity")
+    __slots__ = ("title", "quantity", "order_id")
     TITLE_FIELD_NUMBER: _ClassVar[int]
     QUANTITY_FIELD_NUMBER: _ClassVar[int]
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
     title: str
     quantity: int
-    def __init__(self, title: _Optional[str] = ..., quantity: _Optional[int] = ...) -> None: ...
+    order_id: str
+    def __init__(self, title: _Optional[str] = ..., quantity: _Optional[int] = ..., order_id: _Optional[str] = ...) -> None: ...
 
 class WriteResponse(_message.Message):
     __slots__ = ("success",)
