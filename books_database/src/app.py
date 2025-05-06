@@ -37,7 +37,7 @@ class BooksDatabase(BooksDatabaseServicer, LeaderElectionService):
         # Initialize store with some sample data
         self.store: dict[str, Book] = {
             "Book A": Book(title="Book A", stock=10),
-            "Book B": Book(title="Book B", stock=1),
+            "Book B": Book(title="Book B", stock=5),
         }
         self.temp_updates = {}
 
@@ -69,6 +69,15 @@ class BooksDatabase(BooksDatabaseServicer, LeaderElectionService):
                 return self.send_write_request(request, peer_ip, retry + 1)
 
             logger.warning(f"[{request.title}] - Failed to send write request to {peer_ip}:50056")
+            return False
+    def send_prepare_write(self, request, peer_ip, retry=0):
+        try:
+            with grpc.insecure_channel(f"{peer_ip}:50056") as channel:
+                return BooksDatabaseStub(channel).Prepare_write(request).success
+        except Exception:
+            if retry < 3:
+                return self.send_prepare_write(request, peer_ip, retry + 1)
+            logger.warning(f"[{request.title}] - Failed to send prepare_write to {peer_ip}:50056")
             return False
     ''' 
     def Write(self, request: WriteRequest, context):

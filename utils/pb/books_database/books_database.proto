@@ -4,11 +4,14 @@ package books_database;
 
 service BooksDatabase {
     rpc Read (ReadRequest) returns (ReadResponse) {}
-    rpc Write (WriteRequest) returns (WriteResponse) {}
-    rpc IncrementStock (WriteRequest) returns (WriteResponse) {}
-    rpc DecrementStock (WriteRequest) returns (WriteResponse) {}
+    // rpc Write (WriteRequest) returns (WriteResponse) {}
+    // rpc IncrementStock (WriteRequest) returns (WriteResponse) {}
+    // rpc DecrementStock (WriteRequest) returns (WriteResponse) {}
     
-    rpc Prepare (TransactionRequest) returns (PrepareResponse) {}
+    rpc PrepareWrite (WriteRequest) returns (WriteResponse);
+    rpc PrepareIncrementStock (WriteRequest) returns (WriteResponse);
+    rpc Prepare (TransactionRequest) returns (PrepareResponse);
+    rpc PrepareDecrementStock(WriteRequest) returns (WriteResponse);
     rpc Commit (TransactionRequest) returns (CommitResponse) {}
     rpc Abort (TransactionRequest) returns (AbortResponse) {}
 }
