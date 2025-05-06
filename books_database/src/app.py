@@ -230,25 +230,51 @@ class BooksDatabase(BooksDatabaseServicer, LeaderElectionService):
 
 
     def Prepare(self, request, context):
+        logger.info(f"Preparing transaction for {len(request.updates)} updates")
+        order_id = request.order_id if hasattr(request, 'order_id') else "global_transaction"
+        
         for update in request.updates:
             logger.info(f"[{update.title}] - Preparing write of {update.quantity}")
-        self.prepared = [(update.title, update.quantity) for update in request.updates]
+            self.prepare_write(order_id, update.title, update.quantity)
+            
         return PrepareResponse(ready=True)
     
     def Commit(self, request, context):
-        for update in request.updates:
-            logger.info(f"[{update.title}] - Committing write")
-        if hasattr(self, 'prepared'):
-            for title, quantity in self.prepared:
+        logger.info(f"Committing transaction")
+        order_id = request.order_id if hasattr(request, 'order_id') else "global_transaction"
+        
+        if order_id in self.temp_updates:
+            updates = self.temp_updates[order_id]
+            logger.info(f"Committing {len(updates)} updates for order {order_id}")
+            
+            for update in updates:
+                title = update['book']
+                quantity = update['quantity']
+                logger.info(f"[{title}] - Committing write of {quantity}")
                 self.write(title, quantity)
-            del self.prepared
-        return CommitResponse(success=True)
+                
+            # Clean up after commit
+            del self.temp_updates[order_id]
+            return CommitResponse(success=True)
+        else:
+            logger.warning(f"No prepared updates found for order {order_id}")
+            return CommitResponse(success=False)
     
     def Abort(self, request, context):
-        for update in request.updates:
-            logger.info(f"[{update.title}] - Aborting write")
-        if hasattr(self, 'prepared'):
-            del self.prepared
+        logger.info(f"Aborting transaction")
+        order_id = request.order_id if hasattr(request, 'order_id') else "global_transaction"
+        
+        if order_id in self.temp_updates:
+            updates = self.temp_updates[order_id]
+            logger.info(f"Aborting {len(updates)} updates for order {order_id}")
+            
+            for update in self.temp_updates[order_id]:
+                title = update['book']
+                logger.info(f"[{title}] - Aborting write")
+                
+            # Clean up aborted transaction
+            del self.temp_updates[order_id]
+            
         return AbortResponse(aborted=True)
         
 def serve():
