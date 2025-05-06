@@ -4,16 +4,11 @@ package books_database;
 
 service BooksDatabase {
     rpc Read (ReadRequest) returns (ReadResponse) {}
-    // rpc Write (WriteRequest) returns (WriteResponse) {}
-    // rpc IncrementStock (WriteRequest) returns (WriteResponse) {}
-    // rpc DecrementStock (WriteRequest) returns (WriteResponse) {}
-    
-    rpc PrepareWrite (WriteRequest) returns (WriteResponse);
-    rpc PrepareIncrementStock (WriteRequest) returns (WriteResponse);
-    rpc Prepare (TransactionRequest) returns (PrepareResponse);
-    rpc PrepareDecrementStock(WriteRequest) returns (WriteResponse);
-    rpc Commit (TransactionRequest) returns (CommitResponse) {}
-    rpc Abort (TransactionRequest) returns (AbortResponse) {}
+    rpc PrepareWrite (WriteRequest) returns (PrepareResponse);
+    rpc PrepareIncrementStock (WriteRequest) returns (PrepareResponse);
+    rpc PrepareDecrementStock(WriteRequest) returns (PrepareResponse);
+    rpc CommitWrite (TransactionRequest) returns (CommitResponse) {}
+    rpc AbortWrite (TransactionRequest) returns (AbortResponse) {}
 }
 
 message ReadRequest {
@@ -30,17 +25,12 @@ message WriteRequest {
     string order_id = 3;
 }
 
-message WriteResponse {
-    bool success = 1;
+message PrepareResponse {
+    bool ready = 1;
 }
 
 message TransactionRequest {
     string order_id = 1;
-    repeated WriteRequest updates = 2;
-}
-
-message PrepareResponse {
-    bool ready = 1;
 }
 
 message CommitResponse {

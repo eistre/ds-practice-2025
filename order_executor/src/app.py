@@ -40,116 +40,16 @@ class OrderExecutorService(LeaderElectionService):
         # Schedule order execution
         threading.Thread(target=self.run, daemon=True).start()
 
-    def decrement_stock(self, book):
-        with grpc.insecure_channel('books_database:50056') as channel:
-            response: WriteResponse = BooksDatabaseStub(channel).DecrementStock(WriteRequest(
-                title=book.name,
-                quantity=book.quantity
-            ))
-
-            return book.name, response.success
-        
-    def increment_stock(self, book):
-        with grpc.insecure_channel('books_database:50056') as channel:
-            response: WriteResponse = BooksDatabaseStub(channel).IncrementStock(WriteRequest(
-                title=book.name,
-                quantity=book.quantity
-            ))
-
-            return book.name, response.success
-
-    def execute_order(self, order: DequeueResponse):
-        # Use ThreadPoolExecutor to handle multiple stock decrements concurrently
-        logger.info(f"[Order {order.order_id}] - Decrementing stock for order items...")
-        with futures.ThreadPoolExecutor() as executor:
-            results = list(executor.map(
-                self.decrement_stock,
-                order.items
-            ))
-
-        # Check if all stock decrements were successful
-        if all(result[1] for result in results):
-            return True
-
-        # If any stock decrement failed, increment the stock back
-        logger.error(f"[Order {order.order_id}] - Not enough stock to execute order. Rolling back...")
-        with futures.ThreadPoolExecutor() as executor:
-            results = executor.map(
-                self.increment_stock,
-                [book for book in order.items if (book.name, True) in results]
-            )
-
-        # Check if all stock increments were successful
-        if not all(result[1] for result in results):
-            logger.error(f"[Order {order.order_id}] - Something went wrong rolling back")
-
-        return False
-    '''
-    def two_phase_commit(self, order: DequeueResponse):
-        logger.info(f"[Order {order.order_id}] - Starting 2PC")
-
-        book_prepared = False
-        payment_prepared = False
-
-        try:
-            with grpc.insecure_channel("books_database:50056") as books_channel, \
-                grpc.insecure_channel("payment:50057") as payment_channel:
-
-                books_stub = BooksDatabaseStub(books_channel)
-                payment_stub = PaymentServiceStub(payment_channel)
-
-                # Send Prepare to Books
-                book_prepare_resp = books_stub.Prepare(TransactionRequest(
-                    order_id=order.order_id,
-                    updates=[WriteRequest(title=item.name, quantity=item.quantity) for item in order.items]
-                ))
-
-                # Send Prepare to Payment
-                payment_prepare_resp = payment_stub.Prepare(PaymentRequest(
-                    order_id=order.order_id,
-                    amount=sum(item.quantity for item in order.items) * 5 # just a dummy amount, each book costs 5
-                ))
-
-                book_prepared = book_prepare_resp.ready
-                payment_prepared = payment_prepare_resp.ready
-
-            # If both prepared, commit
-            if book_prepared and payment_prepared:
-                logger.info(f"[Order {order.order_id}] - Both services ready. COMMITTING...")
-
-                with grpc.insecure_channel("books_database:50056") as books_channel, \
-                    grpc.insecure_channel("payment:50057") as payment_channel:
-
-                    BooksDatabaseStub(books_channel).Commit(TransactionRequest(order_id=order.order_id, updates=[WriteRequest(title=item.name, quantity=item.quantity) for item in order.items]))
-                    PaymentServiceStub(payment_channel).Commit(PaymentRequest(order_id=order.order_id))
-
-                return True
-
-            raise Exception("One or more participants not ready")
-
-        except Exception as e:
-            logger.warning(f"[Order {order.order_id}] - ABORTING: {e}")
-
-            if book_prepared:
-                with grpc.insecure_channel("books_database:50056") as books_channel:
-                    BooksDatabaseStub(books_channel).Abort(TransactionRequest(order_id=order.order_id, 
-                                                                              updates=[WriteRequest(title=item.name, quantity=item.quantity) for item in order.items]))
-
-            if payment_prepared:
-                with grpc.insecure_channel("payment:50057") as payment_channel:
-                    PaymentServiceStub(payment_channel).Abort(PaymentRequest(order_id=order.order_id))
-
-            return False
-    '''
     def prepare_decrement_stock(self, book, order_id):
         with grpc.insecure_channel('books_database:50056') as channel:
-            response: WriteResponse = BooksDatabaseStub(channel).PrepareDecrementStock(WriteRequest(
+            response: PrepareResponse = BooksDatabaseStub(channel).PrepareDecrementStock(WriteRequest(
                 title=book.name,
                 quantity=book.quantity,
                 order_id=order_id
             ))
 
-            return book.name, response.success
+            return book.name, response.ready
+        
     def two_phase_commit(self, order: DequeueResponse):
         logger.info(f"[Order {order.order_id}] - Starting 2PC")
 
@@ -158,52 +58,46 @@ class OrderExecutorService(LeaderElectionService):
 
         try:
             # Phase 1: Preparation
-            with grpc.insecure_channel("books_database:50056") as books_channel, \
-                grpc.insecure_channel("payment:50057") as payment_channel:
-
-                books_stub = BooksDatabaseStub(books_channel)
+            with grpc.insecure_channel("payment:50057") as payment_channel:
                 payment_stub = PaymentServiceStub(payment_channel)
+
+                logger.info(f"[Order {order.order_id}] - Preparing payment...")
 
                 # First prepare each book decrement individually to use our improved PrepareDecrementStock logic
                 with futures.ThreadPoolExecutor() as executor:
-                    prepare_results = list(executor.map(
+                    book_prep_resp = list(executor.map(
                         lambda book: self.prepare_decrement_stock(book, order.order_id),
                         order.items
                     ))
-
+                    
                 # Check if all preparations succeeded
-                if not all(result[1] for result in prepare_results):
+                book_prepared = all(result[1] for result in book_prep_resp)
+                if not book_prepared:
                     raise Exception("Book preparation failed - not enough stock")
                 
-                book_prepared = True
-
                 # Send Prepare to Payment
-                payment_prepare_resp = payment_stub.Prepare(PaymentRequest(
+                payment_prep_resp = payment_stub.Prepare(PaymentRequest(
                     order_id=order.order_id,
                     amount=sum(item.quantity for item in order.items) * 5  # just a dummy amount, each book costs 5
                 ))
 
-                payment_prepared = payment_prepare_resp.ready
+                payment_prepared = payment_prep_resp.ready
+                if not payment_prepared:
+                    raise Exception("Payment preparation failed")
 
             # Phase 2: Commit or Abort
             # If both prepared, commit
-            if book_prepared and payment_prepared:
-                logger.info(f"[Order {order.order_id}] - Both services ready. COMMITTING...")
+            logger.info(f"[Order {order.order_id}] - Both services ready. COMMITTING...")
 
-                with grpc.insecure_channel("books_database:50056") as books_channel, \
-                    grpc.insecure_channel("payment:50057") as payment_channel:
+            with grpc.insecure_channel("books_database:50056") as books_channel, \
+                grpc.insecure_channel("payment:50057") as payment_channel:
 
-                    # Send commit to both services
-                    BooksDatabaseStub(books_channel).Commit(TransactionRequest(
-                        order_id=order.order_id, 
-                        updates=[WriteRequest(title=item.name, quantity=item.quantity) for item in order.items]
-                    ))
-                    
-                    PaymentServiceStub(payment_channel).Commit(PaymentRequest(order_id=order.order_id))
+                # Send commit to both services
+                BooksDatabaseStub(books_channel).CommitWrite(TransactionRequest(order_id=order.order_id))
+                
+                PaymentServiceStub(payment_channel).Commit(PaymentRequest(order_id=order.order_id))
 
-                return True
-
-            raise Exception("One or more participants not ready")
+            return True
 
         except Exception as e:
             logger.warning(f"[Order {order.order_id}] - ABORTING: {e}")
@@ -211,17 +105,13 @@ class OrderExecutorService(LeaderElectionService):
             # Abort both services if they were prepared
             if book_prepared:
                 with grpc.insecure_channel("books_database:50056") as books_channel:
-                    BooksDatabaseStub(books_channel).Abort(TransactionRequest(
-                        order_id=order.order_id, 
-                        updates=[WriteRequest(title=item.name, quantity=item.quantity) for item in order.items]
-                    ))
+                    BooksDatabaseStub(books_channel).AbortWrite(TransactionRequest(order_id=order.order_id))
 
             if payment_prepared:
                 with grpc.insecure_channel("payment:50057") as payment_channel:
                     PaymentServiceStub(payment_channel).Abort(PaymentRequest(order_id=order.order_id))
 
             return False
-
 
     def run(self):
         while True:
