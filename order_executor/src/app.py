@@ -84,7 +84,7 @@ class OrderExecutorService(LeaderElectionService):
             logger.error(f"[Order {order.order_id}] - Something went wrong rolling back")
 
         return False
-
+    '''
     def two_phase_commit(self, order: DequeueResponse):
         logger.info(f"[Order {order.order_id}] - Starting 2PC")
 
@@ -140,7 +140,88 @@ class OrderExecutorService(LeaderElectionService):
                     PaymentServiceStub(payment_channel).Abort(PaymentRequest(order_id=order.order_id))
 
             return False
- 
+    '''
+    def prepare_decrement_stock(self, book, order_id):
+        with grpc.insecure_channel('books_database:50056') as channel:
+            response: WriteResponse = BooksDatabaseStub(channel).PrepareDecrementStock(WriteRequest(
+                title=book.name,
+                quantity=book.quantity,
+                order_id=order_id
+            ))
+
+            return book.name, response.success
+    def two_phase_commit(self, order: DequeueResponse):
+        logger.info(f"[Order {order.order_id}] - Starting 2PC")
+
+        book_prepared = False
+        payment_prepared = False
+
+        try:
+            # Phase 1: Preparation
+            with grpc.insecure_channel("books_database:50056") as books_channel, \
+                grpc.insecure_channel("payment:50057") as payment_channel:
+
+                books_stub = BooksDatabaseStub(books_channel)
+                payment_stub = PaymentServiceStub(payment_channel)
+
+                # First prepare each book decrement individually to use our improved PrepareDecrementStock logic
+                with futures.ThreadPoolExecutor() as executor:
+                    prepare_results = list(executor.map(
+                        lambda book: self.prepare_decrement_stock(book, order.order_id),
+                        order.items
+                    ))
+
+                # Check if all preparations succeeded
+                if not all(result[1] for result in prepare_results):
+                    raise Exception("Book preparation failed - not enough stock")
+                
+                book_prepared = True
+
+                # Send Prepare to Payment
+                payment_prepare_resp = payment_stub.Prepare(PaymentRequest(
+                    order_id=order.order_id,
+                    amount=sum(item.quantity for item in order.items) * 5  # just a dummy amount, each book costs 5
+                ))
+
+                payment_prepared = payment_prepare_resp.ready
+
+            # Phase 2: Commit or Abort
+            # If both prepared, commit
+            if book_prepared and payment_prepared:
+                logger.info(f"[Order {order.order_id}] - Both services ready. COMMITTING...")
+
+                with grpc.insecure_channel("books_database:50056") as books_channel, \
+                    grpc.insecure_channel("payment:50057") as payment_channel:
+
+                    # Send commit to both services
+                    BooksDatabaseStub(books_channel).Commit(TransactionRequest(
+                        order_id=order.order_id, 
+                        updates=[WriteRequest(title=item.name, quantity=item.quantity) for item in order.items]
+                    ))
+                    
+                    PaymentServiceStub(payment_channel).Commit(PaymentRequest(order_id=order.order_id))
+
+                return True
+
+            raise Exception("One or more participants not ready")
+
+        except Exception as e:
+            logger.warning(f"[Order {order.order_id}] - ABORTING: {e}")
+
+            # Abort both services if they were prepared
+            if book_prepared:
+                with grpc.insecure_channel("books_database:50056") as books_channel:
+                    BooksDatabaseStub(books_channel).Abort(TransactionRequest(
+                        order_id=order.order_id, 
+                        updates=[WriteRequest(title=item.name, quantity=item.quantity) for item in order.items]
+                    ))
+
+            if payment_prepared:
+                with grpc.insecure_channel("payment:50057") as payment_channel:
+                    PaymentServiceStub(payment_channel).Abort(PaymentRequest(order_id=order.order_id))
+
+            return False
+
 
     def run(self):
         while True:
