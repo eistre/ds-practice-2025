@@ -1,0 +1,19 @@
+{
+  "name": "ds-practice-2025",
+  "version": "1.0.0",
+  "description": "This repository contains the initial code for the practice sessions of the Distributed Systems course at the University of Tartu.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cypress": "^14.4.0"
+  }
+}
