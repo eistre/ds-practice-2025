@@ -38,6 +38,9 @@ class BooksDatabase(BooksDatabaseServicer, LeaderElectionService):
         self.store: dict[str, Book] = {
             "Book A": Book(title="Book A", stock=10),
             "Book B": Book(title="Book B", stock=5),
+            "Book C": Book(title="Book C", stock=4),
+            "Book D": Book(title="Book D", stock=6),
+            "Book E": Book(title="Book E", stock=3),
         }
         self.temp_updates = {}
 
