@@ -117,6 +117,7 @@
             try {
                 const response = await fetch('http://localhost:8081/checkout', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data),
                 });
 
@@ -124,15 +125,19 @@
                 const responseDiv = document.getElementById('response');
 
                 if (response.ok) {
-                    const suggestedBooks = result.suggestedBooks.map(book => `<li>${book.title} by ${book.author}</li>`).join('');
+                    let suggestionsHtml = '';
+                    if (result.status === "Order Approved" && Array.isArray(result.suggestedBooks)) {
+                        const suggestedBooks = result.suggestedBooks
+                            .map(book => `<li>${book.title} by ${book.author}</li>`)
+                            .join('');
+                        suggestionsHtml = `
+                            Suggested Books:
+                            <ul class="list-disc pl-5 mt-2 space-y-1">${suggestedBooks}</ul>`;
+                    }
                     responseDiv.innerHTML = `
                         <strong>Order status: ${result.status}</strong><br>
                         Order ID: ${result.orderId}<br>
-                        ${result.status === "Order Approved" ?
-                            `Suggested Books:
-                            <ul class="list-disc pl-5 mt-2 space-y-1">${suggestedBooks}</ul>`
-                        : ``
-                        }
+                        ${suggestionsHtml}
                     `;
                     color = result.status === 'Order Approved' ? 'green' : 'red';
                     responseDiv.className = `mt-6 p-4 border rounded-lg bg-${color}-100 text-${color}-700`;
