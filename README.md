@@ -44,3 +44,36 @@ frontend service:
 - It's a simple static HTML page, you can open `frontend/src/index.html` in your browser.
 
 And then run each service individually.
+
+### Running the tests
+To run cypress tests for the frontend service, you need to have Node.js and npm installed. Also, the application must be running.
+
+To install Cypress and run the tests, follow these steps:
+
+```bash
+# Install node dependencies
+npm install
+```
+
+```bash
+# Open Cypress test runner
+npx cypress open
+```
+
+This will open the Cypress test runner, and you can run the tests for the frontend service.
+
+To run load tests for the backend services, you can use locust.
+
+To install locust and run the load tests, follow these steps:
+
+```bash
+# Install locust requirements
+pip install -r locust/requirements.txt
+```
+
+```bash
+# Run locust test runner
+locust -f locust/locustfile.py --host=http://localhost:8081
+```
+
+This will start the locust web interface at `http://localhost:8089`, where you can configure the number of users and the spawn rate, and start the load test.
