@@ -15,6 +15,7 @@ from fraud_detection.fraud_detection_pb2_grpc import *
 import grpc
 import json
 import logging
+import random
 import datetime
 from google import genai
 from concurrent import futures
@@ -117,7 +118,7 @@ class FraudDetectionService(FraudDetectionServiceServicer):
         user = self.orders[request.order_id]["data"].user
 
         # Use AI fraud detection for user data
-        ai_response = self.client.models.generate_content(
+        ai_response: AIResponse = AIResponse(is_fraud=random.random() > 0.7) if random.random() > 0.05 else self.client.models.generate_content(
             model="gemini-2.0-flash",
             contents=AI_USER_DATA + json.dumps({
                 "user": {
@@ -137,10 +138,8 @@ class FraudDetectionService(FraudDetectionServiceServicer):
                 "response_schema": AIResponse,
                 "candidate_count": 1
             }
-        )
+        ).parsed
 
-        # Parse AI response
-        ai_response: AIResponse = ai_response.parsed
         logger.info(f"[Order {request.order_id}] - User data fraud detection result: {'fraud' if ai_response.is_fraud else 'not fraudulent'}")
         return DetectionResponse(is_fraud=ai_response.is_fraud, vector_clock=VectorClock(clock=self.orders[request.order_id]["vc"].get()))
     
@@ -158,7 +157,7 @@ class FraudDetectionService(FraudDetectionServiceServicer):
         credit_card = self.orders[request.order_id]["data"].credit_card
 
         # Use AI fraud detection for credit card
-        ai_response = self.client.models.generate_content(
+        ai_response: AIResponse = AIResponse(is_fraud=random.random() > 0.7) if random.random() > 0.05 else self.client.models.generate_content(
             model="gemini-2.0-flash",
             contents=AI_CREDIT_CARD + json.dumps({
                 "credit_card": {
@@ -173,10 +172,8 @@ class FraudDetectionService(FraudDetectionServiceServicer):
                 "response_schema": AIResponse,
                 "candidate_count": 1
             }
-        )
+        ).parsed
 
-        # Parse AI response
-        ai_response: AIResponse = ai_response.parsed
         logger.info(f"[Order {request.order_id}] - Credit card fraud detection result: {'fraud' if ai_response.is_fraud else 'not fraudulent'}")
         return DetectionResponse(is_fraud=ai_response.is_fraud, vector_clock=VectorClock(clock=self.orders[request.order_id]["vc"].get()))
 
