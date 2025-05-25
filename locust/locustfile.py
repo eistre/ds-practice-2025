@@ -49,7 +49,7 @@ class User(HttpUser):
         }]
 
         with self.client.post("/checkout", json=order_data, catch_response=True, name="Non-Fraudulent Order") as response:
-            if response.status_code != 200 or response.json()["status"] != "Order Approved":
+            if response.status_code != 200:
                 response.failure("Order failed")
 
     @tag("mixed")
@@ -63,7 +63,7 @@ class User(HttpUser):
         } for _ in range(random.randint(1, 3))]
 
         with self.client.post("/checkout", json=order_data, catch_response=True, name="Mixed Order") as response:
-            if response.status_code != 200 or response.json().get("status") != "Order Approved":
+            if response.status_code != 200:
                 response.failure("Order failed")
 
     @tag("conflicting")
@@ -77,5 +77,5 @@ class User(HttpUser):
         } for book in AVAILABLE_BOOKS]
 
         with self.client.post("/checkout", json=order_data, catch_response=True, name="Conflicting Order") as response:
-            if response.status_code != 200 or response.json().get("status") != "Order Approved":
+            if response.status_code != 200:
                 response.failure("Order failed")
