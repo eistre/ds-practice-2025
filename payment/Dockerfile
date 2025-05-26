@@ -8,8 +8,15 @@ WORKDIR /app
 # Copy the requirements file to the working directory
 COPY ./payment/requirements.txt .
 
+ENV OTEL_TRACES_EXPORTER=otlp
+ENV OTEL_METRICS_EXPORTER=otlp
+ENV OTEL_LOGS_EXPORTER=otlp
+ENV OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+ENV OTEL_EXPORTER_OTLP_ENDPOINT=http://observability:4318
+
+
 # Install the Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Set the command to run the application
-CMD python utils/other/hotreload.py "payment/src/app.py"
+CMD opentelemetry-instrument python utils/other/hotreload.py "payment/src/app.py"

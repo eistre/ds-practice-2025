@@ -1,0 +1,132 @@
+{
+  "id": 1,
+  "type": "barchart",
+  "title": "New panel",
+  "gridPos": {
+    "x": 0,
+    "y": 0,
+    "h": 8,
+    "w": 12
+  },
+  "fieldConfig": {
+    "defaults": {
+      "custom": {
+        "lineWidth": 1,
+        "fillOpacity": 80,
+        "gradientMode": "none",
+        "axisPlacement": "auto",
+        "axisLabel": "",
+        "axisColorMode": "text",
+        "axisBorderShow": false,
+        "scaleDistribution": {
+          "type": "linear"
+        },
+        "axisCenteredZero": false,
+        "hideFrom": {
+          "tooltip": false,
+          "viz": false,
+          "legend": false
+        },
+        "thresholdsStyle": {
+          "mode": "off"
+        }
+      },
+      "color": {
+        "mode": "palette-classic"
+      },
+      "mappings": [],
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "value": null,
+            "color": "green"
+          },
+          {
+            "value": 80,
+            "color": "red"
+          }
+        ]
+      }
+    },
+    "overrides": []
+  },
+  "pluginVersion": "12.0.1",
+  "targets": [
+    {
+      "refId": "A",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "editorMode": "builder",
+      "expr": "payment_success_total{service_name=\"payment-service\"}",
+      "legendFormat": "__auto",
+      "range": true,
+      "useBackend": false,
+      "disableTextWrap": false,
+      "fullMetaSearch": false,
+      "includeNullMetadata": true
+    },
+    {
+      "refId": "B",
+      "expr": "payment_requests_total{service_name=\"payment-service\"}",
+      "range": true,
+      "instant": false,
+      "datasource": {
+        "uid": "prometheus",
+        "type": "prometheus"
+      },
+      "hide": false,
+      "editorMode": "code",
+      "legendFormat": "__auto",
+      "useBackend": false,
+      "disableTextWrap": false,
+      "fullMetaSearch": false,
+      "includeNullMetadata": true
+    },
+    {
+      "refId": "C",
+      "expr": "payment_failed_total",
+      "range": true,
+      "instant": false,
+      "datasource": {
+        "uid": "prometheus",
+        "type": "prometheus"
+      },
+      "hide": false,
+      "editorMode": "builder",
+      "legendFormat": "__auto",
+      "useBackend": false,
+      "disableTextWrap": false,
+      "fullMetaSearch": false,
+      "includeNullMetadata": true
+    }
+  ],
+  "datasource": {
+    "uid": "prometheus",
+    "type": "prometheus"
+  },
+  "options": {
+    "orientation": "auto",
+    "xTickLabelRotation": 0,
+    "xTickLabelSpacing": 0,
+    "showValue": "auto",
+    "stacking": "none",
+    "groupWidth": 0.7,
+    "barWidth": 0.97,
+    "barRadius": 0,
+    "fullHighlight": false,
+    "tooltip": {
+      "mode": "single",
+      "sort": "none",
+      "hideZeros": false
+    },
+    "legend": {
+      "showLegend": true,
+      "displayMode": "list",
+      "placement": "bottom",
+      "calcs": []
+    }
+  }
+}
