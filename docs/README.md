@@ -6,12 +6,16 @@ This project is a distributed system for an online book store in the distributed
 ## Project Structure
 ```
 /
+├── books_database/             # Database service for storing book information and inventory
+├── cypress/                    # End-to-end testing framework for the frontend
 ├── docs/                       # Project documentation
 ├── fraud_detection/            # Fraud detection service
 ├── frontend/                   # Frontend client
+├── locust/                     # Load testing framework for the system
 ├── orchestrator/               # Orchestration service for managing other services
 ├── order_executor/             # Order execution service
 ├── order_queue/                # Order queue management service
+├── payment/                    # Payment service for processing transactions
 ├── suggestions/                # Book suggestions service
 ├── transaction_verification/   # Transaction verification service
 ├── utils/                      # Shared utilities and libraries (gRPC, OpenAPI)
@@ -28,12 +32,17 @@ Vector clocks are used in Fraud Detection, Transaction Verification, and Suggest
 
 The Order Executor service processes the queued orders by the Order Queue service for final execution. To ensure high availability and fault tolerance, the Order Executor runs with multiple replicas using a leader election mechanism based on the Bully Algorithm. This approach allows the system to automatically detect and recover from failures while also avoiding duplicate order processing, as only the leader replica executes orders.
 
+Similar to the Order Executor, the Books Database service also employs a leader election mechanism to ensure that only one instance is responsible for handling database write operations at any given time, preventing conflicts and ensuring data consistency. The Order Executor service implement a 2-phase commit to ensure that all order processing steps between the Books Database and Payment services are completed successfully before finalizing the order.
+
+## Final Architecture Diagram
+![Final Architecture Diagram](./architecture_diagram_final.png)
+
 ## Consistency Protocol Diagram
 ![Consistency Protocol Diagram](./consistency_protocol_diagram.png)
 
-
 ## Distributed Commitment Protocol Diagram
 ![Distributed Commitment Protocol Diagram](./distributed_commitment_protocol_diagram.png)
+
 ## Vector Clocks Diagram
 
 ![Vector clocks diagram](./vector_clocks_diagram.png)
