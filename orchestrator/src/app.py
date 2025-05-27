@@ -1,5 +1,6 @@
 import uuid
 import logging
+import time
 from concurrent import futures
 from service_calls.order_queue_calls import *
 from service_calls.suggestions_calls import *
@@ -45,11 +46,18 @@ checkouts_in_progress = meter.create_up_down_counter(
     unit="checkouts"
 )
 
+checkout_duration_histogram = meter.create_histogram(
+    "checkout_processing_duration",
+    description="Time taken to process a checkout",
+    unit="ms"
+)
+
 @app.route('/checkout', methods=['POST'])
 def checkout():
     """
     Responds with a JSON object containing the order ID, status, and suggested books.
     """
+    start_time = time.time()
     vector_clock=[0,0,0]
     checkouts_in_progress.add(1)
     try:
@@ -124,6 +132,8 @@ def checkout():
             ))
 
         logger.info(f"[Order {order_id}] - Checkout request completed")
+        duration_ms = (time.time() - start_time) * 1000
+        checkout_duration_histogram.record(duration_ms)
         checkouts_in_progress.add(-1)
 
 if __name__ == '__main__':
