@@ -36,10 +36,23 @@ reader = PeriodicExportingMetricReader(OTLPMetricExporter(endpoint="http://obser
 metrics.set_meter_provider(MeterProvider(resource=resource, metric_readers=[reader]))
 meter = metrics.get_meter(__name__)
 
-# Metric Instruments
+# Counter
 payment_counter = meter.create_counter("payment_requests", description="Total payment attempts")
 success_counter = meter.create_counter("payment_success", description="Total successful payments")
 abort_counter = meter.create_counter("payment_failed", description="Total failed payments")
+
+# UpDownCounter (can go up or down)
+payment_in_progress = meter.create_up_down_counter(
+    "payment_in_progress",
+    description="Number of payments currently in progress"
+)
+
+#Histogram
+payment_amount_histogram = meter.create_histogram(
+    "payment_amount",
+    description="Histogram of payment amounts"
+)
+
 
 import logging
 logger = logging.getLogger()
@@ -54,6 +67,8 @@ class PaymentService(payment_pb2_grpc.PaymentService):
             span.set_attribute("order_id", request.order_id)
             span.set_attribute("amount", request.amount)
             payment_counter.add(1)
+            payment_in_progress.add(1)
+            payment_amount_histogram.record(request.amount)
             # Dummy version: if amount is small then approved (person likely has enough to pay) with higher cost 70% approval
             approved = request.amount < 100 or random.random()>0.3
             if approved:
@@ -69,6 +84,7 @@ class PaymentService(payment_pb2_grpc.PaymentService):
             span.set_attribute("order_id", request.order_id)
             span.set_attribute("amount", request.amount)
             success_counter.add(1)
+            payment_in_progress.add(-1)
             if request.order_id in self.prepared_payments:
                 print(f"Payment: Payment committed for order {request.order_id}, amount ${self.prepared_payments[request.order_id]}")
                 del self.prepared_payments[request.order_id]
@@ -82,6 +98,7 @@ class PaymentService(payment_pb2_grpc.PaymentService):
             span.set_attribute("order_id", request.order_id)
             span.set_attribute("amount", request.amount)
             abort_counter.add(1)
+            payment_in_progress.add(-1)
             if request.order_id in self.prepared_payments:
                 del self.prepared_payments[request.order_id]
                 print(f"Payment: Payment aborted for order {request.order_id}")
