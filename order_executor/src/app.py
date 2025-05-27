@@ -69,11 +69,6 @@ class OrderExecutorService(LeaderElectionService):
                         lambda book: self.prepare_decrement_stock(book, order.order_id),
                         order.items
                     ))
-                    
-                # Check if all preparations succeeded
-                book_prepared = all(result[1] for result in book_prep_resp)
-                if not book_prepared:
-                    raise Exception("Book preparation failed - not enough stock")
                 
                 # Send Prepare to Payment
                 payment_prep_resp = payment_stub.Prepare(PaymentRequest(
@@ -81,7 +76,13 @@ class OrderExecutorService(LeaderElectionService):
                     amount=sum(item.quantity for item in order.items) * 5  # just a dummy amount, each book costs 5
                 ))
 
+                # Check if all preparations succeeded
+                book_prepared = all(result[1] for result in book_prep_resp)
                 payment_prepared = payment_prep_resp.ready
+
+                if not book_prepared:
+                    raise Exception("Book preparation failed - not enough stock")
+
                 if not payment_prepared:
                     raise Exception("Payment preparation failed")
 
