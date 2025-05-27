@@ -118,7 +118,7 @@ class FraudDetectionService(FraudDetectionServiceServicer):
         user = self.orders[request.order_id]["data"].user
 
         # Use AI fraud detection for user data
-        ai_response: AIResponse = AIResponse(is_fraud=random.random() > 0.7) if random.random() > 0.05 else self.client.models.generate_content(
+        ai_response: AIResponse = AIResponse(is_fraud=random.random() > 0.9) if random.random() > 0.05 else self.client.models.generate_content(
             model="gemini-2.0-flash",
             contents=AI_USER_DATA + json.dumps({
                 "user": {
@@ -157,7 +157,7 @@ class FraudDetectionService(FraudDetectionServiceServicer):
         credit_card = self.orders[request.order_id]["data"].credit_card
 
         # Use AI fraud detection for credit card
-        ai_response: AIResponse = AIResponse(is_fraud=random.random() > 0.7) if random.random() > 0.05 else self.client.models.generate_content(
+        ai_response: AIResponse = AIResponse(is_fraud=random.random() > 0.9) if random.random() > 0.05 else self.client.models.generate_content(
             model="gemini-2.0-flash",
             contents=AI_CREDIT_CARD + json.dumps({
                 "credit_card": {

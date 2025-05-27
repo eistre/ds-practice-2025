@@ -13,6 +13,7 @@ import grpc
 import json
 import random
 import logging
+from faker import Faker
 from google import genai
 from concurrent import futures
 from pydantic import BaseModel
@@ -25,6 +26,7 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger()
+faker = Faker()
 
 class BookModel(BaseModel):
     title: str
@@ -101,7 +103,7 @@ class SuggestionService(SuggestionServiceServicer):
         items = self.orders[request.order_id]["data"].items
 
         # Generate AI response
-        ai_response = self.client.models.generate_content(
+        ai_response: AIResponse = AIResponse(suggested_books=[BookModel(title=faker.sentence(5, True)[:-1], author=faker.name()) for _ in range(5)]) if random.random() > 0.05 else self.client.models.generate_content(
             model="gemini-2.0-flash",
             contents=AI_SUGGESTION_PROMPT + json.dumps({
                 "items": [
@@ -113,10 +115,8 @@ class SuggestionService(SuggestionServiceServicer):
                 "response_schema": AIResponse,
                 "candidate_count": 1
             }
-        )
+        ).parsed
 
-        # Parse AI response
-        ai_response: AIResponse = ai_response.parsed
         logger.info(f"[Order {request.order_id}] - Book suggestion successful: {[book.title for book in ai_response.suggested_books]}")
 
         return SuggestionResponse(
