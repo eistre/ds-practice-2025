@@ -27,12 +27,31 @@ app = Flask(__name__)
 # Enable CORS for the app.
 CORS(app, resources={r'/*': {'origins': '*'}})
 
+from opentelemetry import metrics
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
+
+resource = Resource.create(attributes={"service.name": "orchestrator-service"})
+
+metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter(endpoint="http://observability:4318/v1/metrics"))
+metrics.set_meter_provider(MeterProvider(resource=resource, metric_readers=[metric_reader]))
+meter = metrics.get_meter(__name__)
+
+checkouts_in_progress = meter.create_up_down_counter(
+    name="checkouts_in_progress",
+    description="Number of checkouts currently in progress",
+    unit="checkouts"
+)
+
 @app.route('/checkout', methods=['POST'])
 def checkout():
     """
     Responds with a JSON object containing the order ID, status, and suggested books.
     """
     vector_clock=[0,0,0]
+    checkouts_in_progress.add(1)
     try:
         # Get request object data to json
         request_data = json.loads(request.data)
@@ -105,6 +124,7 @@ def checkout():
             ))
 
         logger.info(f"[Order {order_id}] - Checkout request completed")
+        checkouts_in_progress.add(-1)
 
 if __name__ == '__main__':
     # Run the app in debug mode to enable hot reloading.

@@ -11,12 +11,19 @@ from utils.utils_pb2 import *
 from order_queue.order_queue_pb2 import *
 from order_queue.order_queue_pb2_grpc import *
 
+import time
 import grpc
 import logging
 import threading
 from concurrent import futures
 from queue import PriorityQueue
 from google.protobuf import empty_pb2
+
+from opentelemetry import metrics
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 
 # Configure logging
 logging.basicConfig(
@@ -26,12 +33,41 @@ logging.basicConfig(
 
 logger = logging.getLogger()
 
+resource = Resource.create(attributes={"service.name": "order-queue-service"})
+
+metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter(endpoint="http://observability:4318/v1/metrics"))
+metrics.set_meter_provider(MeterProvider(resource=resource, metric_readers=[metric_reader]))
+meter = metrics.get_meter(__name__)
+
 # Class for order queue
 class OrderQueueService(OrderQueueServiceServicer):
     def __init__(self):
         self._lock = threading.Lock()
         self._queue = PriorityQueue()
+        self._start_time = time.time()
         logger.info("Order queue service initialized")
+
+        # Create an observable gauge for the number of enqueued items
+        meter.create_observable_gauge(
+            name="order_queue.size",
+            description="The number of items in the order queue",
+            callbacks=[self._get_queue_size],
+            unit="items"
+        )
+
+        # Create an observable gauge for service uptime
+        meter.create_observable_gauge(
+            name="order_queue.uptime",
+            description="The uptime of the order queue service",
+            callbacks=[self._get_uptime],
+            unit="seconds"
+        )
+
+    def _get_queue_size(self, options):
+        yield metrics.Observation(value=self._queue.qsize())
+
+    def _get_uptime(self, options):
+        yield metrics.Observation(value=time.time() - self._start_time)
 
     def _generate_priority(self, request: EnqueueRequest):
         request_unique_string = f"""
