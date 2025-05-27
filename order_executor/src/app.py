@@ -96,7 +96,7 @@ class OrderExecutorService(LeaderElectionService):
                 # Send commit to both services
                 BooksDatabaseStub(books_channel).CommitWrite(TransactionRequest(order_id=order.order_id))
                 
-                PaymentServiceStub(payment_channel).Commit(PaymentRequest(order_id=order.order_id))
+                PaymentServiceStub(payment_channel).Commit(PaymentRequest(order_id=order.order_id,amount=sum(item.quantity for item in order.items) * 5))
 
             return True
 
@@ -110,7 +110,7 @@ class OrderExecutorService(LeaderElectionService):
 
             if payment_prepared:
                 with grpc.insecure_channel("payment:50057") as payment_channel:
-                    PaymentServiceStub(payment_channel).Abort(PaymentRequest(order_id=order.order_id))
+                    PaymentServiceStub(payment_channel).Abort(PaymentRequest(order_id=order.order_id,amount=sum(item.quantity for item in order.items) * 5))
 
             return False
 

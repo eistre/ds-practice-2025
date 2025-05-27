@@ -68,7 +68,7 @@ class PaymentService(payment_pb2_grpc.PaymentService):
             span.set_attribute("amount", request.amount)
             payment_counter.add(1)
             payment_in_progress.add(1)
-            payment_amount_histogram.record(request.amount)
+            #payment_amount_histogram.record(request.amount)
             # Dummy version: if amount is small then approved (person likely has enough to pay) with higher cost 70% approval
             approved = request.amount < 100 or random.random()>0.3
             if approved:
@@ -85,6 +85,7 @@ class PaymentService(payment_pb2_grpc.PaymentService):
             span.set_attribute("amount", request.amount)
             success_counter.add(1)
             payment_in_progress.add(-1)
+            payment_amount_histogram.record(request.amount)
             if request.order_id in self.prepared_payments:
                 print(f"Payment: Payment committed for order {request.order_id}, amount ${self.prepared_payments[request.order_id]}")
                 del self.prepared_payments[request.order_id]
