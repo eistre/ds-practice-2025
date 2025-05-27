@@ -1,132 +1,216 @@
 {
-  "id": 1,
-  "type": "barchart",
-  "title": "New panel",
-  "gridPos": {
-    "x": 0,
-    "y": 0,
-    "h": 8,
-    "w": 12
-  },
-  "fieldConfig": {
-    "defaults": {
-      "custom": {
-        "lineWidth": 1,
-        "fillOpacity": 80,
-        "gradientMode": "none",
-        "axisPlacement": "auto",
-        "axisLabel": "",
-        "axisColorMode": "text",
-        "axisBorderShow": false,
-        "scaleDistribution": {
-          "type": "linear"
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
         },
-        "axisCenteredZero": false,
-        "hideFrom": {
-          "tooltip": false,
-          "viz": false,
-          "legend": false
-        },
-        "thresholdsStyle": {
-          "mode": "off"
-        }
-      },
-      "color": {
-        "mode": "palette-classic"
-      },
-      "mappings": [],
-      "thresholds": {
-        "mode": "absolute",
-        "steps": [
-          {
-            "value": null,
-            "color": "green"
-          },
-          {
-            "value": 80,
-            "color": "red"
-          }
-        ]
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
       }
-    },
-    "overrides": []
+    ]
   },
-  "pluginVersion": "12.0.1",
-  "targets": [
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 4,
+  "links": [],
+  "panels": [
     {
-      "refId": "A",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "editorMode": "builder",
-      "expr": "payment_success_total{service_name=\"payment-service\"}",
-      "legendFormat": "__auto",
-      "range": true,
-      "useBackend": false,
-      "disableTextWrap": false,
-      "fullMetaSearch": false,
-      "includeNullMetadata": true
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "payment_success_total",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "legendFormat": "Successful",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "payment_requests_total",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "Total",
+          "range": true,
+          "refId": "B",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "payment_failed_total",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "Failed",
+          "range": true,
+          "refId": "C",
+          "useBackend": false
+        }
+      ],
+      "title": "Order Statistics",
+      "type": "stat"
     },
     {
-      "refId": "B",
-      "expr": "payment_requests_total{service_name=\"payment-service\"}",
-      "range": true,
-      "instant": false,
       "datasource": {
-        "uid": "prometheus",
-        "type": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
-      "hide": false,
-      "editorMode": "code",
-      "legendFormat": "__auto",
-      "useBackend": false,
-      "disableTextWrap": false,
-      "fullMetaSearch": false,
-      "includeNullMetadata": true
-    },
-    {
-      "refId": "C",
-      "expr": "payment_failed_total",
-      "range": true,
-      "instant": false,
-      "datasource": {
-        "uid": "prometheus",
-        "type": "prometheus"
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
       },
-      "hide": false,
-      "editorMode": "builder",
-      "legendFormat": "__auto",
-      "useBackend": false,
-      "disableTextWrap": false,
-      "fullMetaSearch": false,
-      "includeNullMetadata": true
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "12.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "hide": false,
+          "limit": 20,
+          "metricsQueryType": "range",
+          "query": "select(trace:id, span:name, span.order_id, span.amount)\n",
+          "queryType": "traceql",
+          "refId": "A",
+          "tableType": "traces"
+        }
+      ],
+      "title": "Order Traces",
+      "type": "table"
     }
   ],
-  "datasource": {
-    "uid": "prometheus",
-    "type": "prometheus"
+  "preload": false,
+  "schemaVersion": 41,
+  "tags": [],
+  "templating": {
+    "list": []
   },
-  "options": {
-    "orientation": "auto",
-    "xTickLabelRotation": 0,
-    "xTickLabelSpacing": 0,
-    "showValue": "auto",
-    "stacking": "none",
-    "groupWidth": 0.7,
-    "barWidth": 0.97,
-    "barRadius": 0,
-    "fullHighlight": false,
-    "tooltip": {
-      "mode": "single",
-      "sort": "none",
-      "hideZeros": false
-    },
-    "legend": {
-      "showLegend": true,
-      "displayMode": "list",
-      "placement": "bottom",
-      "calcs": []
-    }
-  }
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "New dashboard",
+  "uid": "9b946f06-979c-4264-844c-192d41f5dec2",
+  "version": 11
 }
