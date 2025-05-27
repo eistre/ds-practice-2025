@@ -55,6 +55,13 @@ payment_amount_histogram = meter.create_histogram(
 
 
 import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] - [%(levelname)s] - [Payment] - [Thread %(thread)d] - %(message)s"
+)
+
 logger = logging.getLogger()
 
 class PaymentService(payment_pb2_grpc.PaymentService):
@@ -73,10 +80,10 @@ class PaymentService(payment_pb2_grpc.PaymentService):
             approved = request.amount < 100 or random.random()>0.3
             if approved:
                 self.prepared_payments[request.order_id] = request.amount
-                print(f"Payment: Prepared for order {request.order_id} with amount ${request.amount}")
+                logger.info(f"[Order {request.order_id}] - Payment prepared for amount ${request.amount}")
                 return payment_pb2.PrepareResponse(ready=True)
 
-            print(f"Payment: Rejected payment for order {request.order_id}, amount ${request.amount}")
+            logger.warning(f"[Order {request.order_id}] - Payment rejected for amount ${request.amount}")
             return payment_pb2.PrepareResponse(ready=False)
     
     def Commit(self, request, context):
@@ -87,11 +94,11 @@ class PaymentService(payment_pb2_grpc.PaymentService):
             payment_in_progress.add(-1)
             payment_amount_histogram.record(request.amount)
             if request.order_id in self.prepared_payments:
-                print(f"Payment: Payment committed for order {request.order_id}, amount ${self.prepared_payments[request.order_id]}")
+                logger.info(f"[Order {request.order_id}] - Committing payment of ${self.prepared_payments[request.order_id]}")
                 del self.prepared_payments[request.order_id]
                 return payment_pb2.CommitResponse(success=True)
             
-            print(f"Payment: Commit failed, no prepared payment for order {request.order_id}")
+            logger.error(f"[Order {request.order_id}] - Commit failed, no prepared payment found")
             return payment_pb2.CommitResponse(success=False)
     
     def Abort(self, request, context):
@@ -102,10 +109,10 @@ class PaymentService(payment_pb2_grpc.PaymentService):
             payment_in_progress.add(-1)
             if request.order_id in self.prepared_payments:
                 del self.prepared_payments[request.order_id]
-                print(f"Payment: Payment aborted for order {request.order_id}")
+                logger.info(f"[Order {request.order_id}] - Payment aborted for amount ${request.amount}")
                 return payment_pb2.AbortResponse(aborted=True)
 
-            print(f"Payment: Abort called, but no payment to abort for order {request.order_id}")
+            logger.warning(f"[Order {request.order_id}] - Abort called, but no payment to abort")
             return payment_pb2.AbortResponse(aborted=False)
     
 def serve():
